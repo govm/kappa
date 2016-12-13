@@ -1,0 +1,12 @@
+("quicklisp" .
+ (:class qlot.source.ql:source-ql-all
+  :initargs (:project-name "quicklisp" :%version :latest)
+  :version "2016-12-08"))
+("usocket" .
+ (:class qlot.source.ql:source-ql
+  :initargs (:project-name "usocket" :%version :latest)
+  :version "ql-2016-12-08"))
+("fast-http" .
+ (:class qlot.source.ql:source-ql
+  :initargs (:project-name "fast-http" :%version :latest)
+  :version "ql-2016-12-08"))
