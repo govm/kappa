@@ -18,7 +18,8 @@
   :license "MIT"
   :depends-on (:usocket
                :portable-threads
-               :fast-http)
+               :fast-http
+               :cl-annot)
   :components ((:module "src"
                 :components
                 ((:file "kappa")

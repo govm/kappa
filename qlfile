@@ -1,3 +1,4 @@
 ql usocket :latest
 ql fast-http :latest
+ql cl-annot :latest
 

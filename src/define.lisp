@@ -3,14 +3,61 @@
   (:use :cl)
   (:import-from :usocket
                 :socket-server)
-  (:export :ofp_header))
+  (:export :get-constant-name))
 (in-package :kappa.define)
 
+(annot:enable-annot-syntax)
 
-(defmacro defconstants (doc &body body)
-  (declare (ignore doc))
+(let ((hash (make-hash-table :test #'equalp)))
+  (defun defenumtype (type)
+    (setf (gethash type hash) (make-hash-table :test #'equalp)))
+  (defun %add-constant (type name num)
+    (setf (gethash num (gethash type hash)) name))
+  (defun get-constant-name (type num)
+    (gethash num (gethash type hash))))
+
+(defmacro add-constant (type sym num)
   `(progn
-     ,@(mapcar #'(lambda (nv) `(export (defconstant ,(car nv) ,(cadr nv)))) body)))
+     (%add-constant ,type ,(symbol-name sym) ,num)
+     @export
+     (defconstant ,sym ,num)))
+
+(defmacro defconstants (type &body body)
+  `(progn
+     (defenumtype ,type)
+     ,@(mapcar #'(lambda (nv) `(add-constant ,type ,(car nv) ,(cadr nv))) body)))
+
+(defconstants "global"
+  (OFP_VERSION_1.0 #x01)
+  (OFP_VERSION_1.1 #x02)
+  (OFP_VERSION_1.2 #x03)
+  (OFP_VERSION_1.3 #x04)
+  (OFP_VERSION_1.4 #x05)
+  (OFP_VERSION_1.5 #x06)
+
+  (OFP_MAX_TABLE_NAME_LEN 32)
+  (OFP_MAX_PORT_NAME_LEN 16)
+
+  (OFP_TCP_PORT 6653)
+  (OFP_SSL_PORT 6653)
+
+  (OFP_ETH_ALEN 6)
+
+  (OFP_DEFAULT_MISS_SEND_LEN 128)
+
+  (OFP_FLOW_PERMANENT 0)
+  (OFP_DEFAULT_PRIORITY 0)
+
+  (OFP_NO_BUFFER #xffffffff)
+
+  (DESC_STR_LEN 256)
+  (SERIAL_NUM_LEN 32)
+
+  (OFPQ_ALL #xffffffff)
+  (OFPQ_MIN_RATE_UNCFG #xffff)
+  (OFPQ_MAX_RATE_UNCFG #xffff)
+
+  (OFPCID_UNDEFINED 0))
 
 (defstruct ofp_header
   version
@@ -1541,4 +1588,147 @@
   (OFPBMC_DUP_FIELD 10)
   (OFPBMC_EPERM 11))
 
-; p185
+(defconstants "ofp_flow_mod_failed_code"
+  (OFPFMFC_UNKNOWN 0)
+  (OFPFMFC_TABLE_FULL 1)
+  (OFPFMFC_BAD_TABLE_ID 2)
+  (OFPFMFC_OVERLAP 3)
+  (OFPFMFC_EPERM 4)
+  (OFPFMFC_BAD_TIMEOUT 5)
+  (OFPFMFC_BAD_COMMAND 6)
+  (OFPFMFC_BAD_GLAGS 7)
+  (OFPFMFC_CANT_SYNC 8)
+  (OFPFMFC_BAD_PRIORITY 9)
+  (OFPFMFC_IS_SYNC 10))
+
+(defconstants "ofp_group_mod_failed_code"
+  (OFPGMFC_GROUP_EXISTS 0)
+  (OFPGMFC_INVALID_GROUP 1)
+  (OFPGMFC_WEIGHT_UNSUPPORTED 2)
+  (OFPGMFC_OUT_OF_GROUPS 3)
+  (OFPGMFC_OUT_OF_BUCKETS 4)
+  (OFPGMFC_CHAINING_UNSUPPORTED 5)
+  (OFPGMFC_WATCH_UNSUPPORTED 6)
+  (OFPGMFC_LOOP 7)
+  (OFPGMFC_UNKNOWN_GROUP 8)
+  (OFPGMFC_CHAINED_GROUP 9)
+  (OFPGMFC_BAD_TYPE 10)
+  (OFPGMFC_BAD_COMMAND 11)
+  (OFPGMFC_BAD_BUCKET 12)
+  (OFPGMFC_BAD_WATCH 13)
+  (OFPGMFC_EPERM 14)
+  (OFPGMFC_UNKNOWN_BUCKET 15)
+  (OFPGMFC_BUCKET_EXISTS 16))
+
+(defconstants "ofp_port_mod_failed_code"
+  (OFPPMFC_BAD_PORT 0)
+  (OFPPMFC_BAD_HW_ADDR 1)
+  (OFPPMFC_BAD_CONFIG 2)
+  (OFPPMFC_BAD_ADVERTISE 3)
+  (OFPPMFC_EPERM 4))
+
+(defconstants "ofp_table_mod_failed_code"
+  (OFPTMFC_BAD_TABLE 0)
+  (OFPTMFC_BAD_CONFIG 1)
+  (OFPTMFC_EPERM 2))
+
+(defconstants "ofp_queue_op_failed_code"
+  (OFPQOFC_BAD_PORT 0)
+  (OFPQOFC_BAD_QUEUE 1)
+  (OFPQOFC_EPERM 2))
+
+(defconstants "ofp_switch_config_failed_code"
+  (OFPSCFC_BAD_FLAGS 0)
+  (OFPSCFC_BAD_LEN 1)
+  (OFPSCFC_EPERM 2))
+
+(defconstants "ofp_role_request_failed_code"
+  (OFPRRFC_STALE 0)
+  (OFPRRFC_UNSUP 1)
+  (OFPRRFC_BAD_ROLE 2)
+  (OFPRRFC_ID_UNSUP 3)
+  (OFPRRFC_ID_IN_USE 4))
+
+(defconstants "ofp_meter_mod_failed_code"
+  (OFPMMFC_UNKNOWN 0)
+  (OFPMMFC_METER_EXISTS 1)
+  (OFPMMFC_INVALID_METER 2)
+  (OFPMMFC_UNKNOWN_METER 3)
+  (OFPMMFC_BAD_COMMAND 4)
+  (OFPMMFC_BAD_FLAGS 5)
+  (OFPMMFC_BAD_RATE 6)
+  (OFPMMFC_BAD_BURST 7)
+  (OFPMMFC_BAD_BAND 8)
+  (OFPMMFC_BAD_BAND_VALUE 9)
+  (OFPMMFC_OUT_OF_METERS 10)
+  (OFPMMFC_OUT_OF_BANDS 11))
+
+(defconstants "ofp_table_features_failed_code"
+  (OFPTFFC_BAD_TABLE 0)
+  (OFPTFFC_BAD_METADATA 1)
+  (OFPTFFC_EPERM 5)
+  (OFPTFFC_BAD_CAPA 6)
+  (OFPTFFC_BAD_MAX_ENT 7)
+  (OFPTFFC_BAD_FEATURES 8)
+  (OFPTFFC_BAD_COMMAND 9)
+  (OFPTFFC_TOO_MANY 10))
+
+(defconstants "ofp_bad_property_code"
+  (OFPBPC_BAD_TYPE 0)
+  (OFPBPC_BAD_LEN 1)
+  (OFPBPC_BAD_VALUE 2)
+  (OFPBPC_TOO_MANY 3)
+  (OFPBPC_DUP_TYPE 4)
+  (OFPBPC_BAD_EXPERIMENTER 5)
+  (OFPBPC_BAD_EXP_TYPE 6)
+  (OFPBPC_BAD_EXP_VALUE 7)
+  (OFPBPC_EPERM 8))
+
+(defconstants "ofp_async_config_failed_code"
+  (OFPACFC_INVALID 0)
+  (OFPACFC_UNSUPPORTED 1)
+  (OFPACFC_EPERM 2))
+
+(defconstants "ofp_flow_monitor_failed_code"
+  (OFPMOFC_UNKNOWN 0)
+  (OFPMOFC_MONITOR_EXISTS 1)
+  (OFPMOFC_INVALID_MONITOR 2)
+  (OFPMOFC_UNKNOWN_MONITOR 3)
+  (OFPMOFC_BAD_COMMAND 4)
+  (OFPMOFC_BAD_FLAGS 5)
+  (OFPMOFC_BAD_TABLE_ID 6)
+  (OFPMOFC_BAD_OUT 7))
+
+(defconstants "ofp_bundle_failed_code"
+  (OFPBFC_UNKNOWN 0)
+  (OFPBFC_EPERM 1)
+  (OFPBFC_BAD_ID 2)
+  (OFPBFC_BUNDLE_EXISTS 3)
+  (OFPBFC_BUNDLE_CLOSED 4)
+  (OFPBFC_OUT_OF_BUNDLES 5)
+  (OFPBFC_BAD_TYPE 6)
+  (OFPBFC_BAD_FLAGS 7)
+  (OFPBFC_MSG_BAD_LEN 8)
+  (OFPBFC_MSG_BAD_XID 9)
+  (OFPBFC_MSG_UNSUP 10)
+  (OFPBFC_MSG_CONFLICT 11)
+  (OFPBFC_MSG_TOO_MANY 12)
+  (OFPBFC_MSG_FAILED 13)
+  (OFPBFC_TIMEOUT 14)
+  (OFPBFC_BUNDLE_IN_PROGRESS 15)
+  (OFPBFC_SCHED_NOT_SUPPORTED 16)
+  (OFPBFC_SCHED_FUTURE 17)
+  (OFPBFC_SCHED_PAST 18))
+
+(defstruct ofp_error_experimenter_msg
+  header
+  (type OFPET_EXPERIMENTER)
+  exp_code
+  experimenter
+  data)
+
+(defstruct ofp_experimenter_msg
+  header
+  experimenter
+  exp_type
+  experimenter_data)
