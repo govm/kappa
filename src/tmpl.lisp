@@ -1,9 +1,6 @@
 (in-package :cl-user)
-(defpackage kappa
-  (:use :cl)
-  (:import-from :usocket
-                :socket-server)
-  (:export :start-server
-           :test-server))
-(in-package :kappa)
+(defpackage kappa.tmpl
+  (:use :cl))
+(in-package :kappa.tmpl)
 
+; blah blah blah

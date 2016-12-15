@@ -3,11 +3,27 @@
   (:use :cl
         :annot
         :annot.class
+        :annot.util
         :fast-io)
+  (:import-from :alexandria
+                :symbolicate)
   (:export :get-constant-name))
 (in-package :kappa.define)
 
 (annot:enable-annot-syntax)
+
+(defmacro export-p (class-definition-form)
+  (progn-form-replace-last
+    (lambda (class-definition-form)
+      `(progn
+         (export ',(symbolicate (second class-definition-form) '-p))
+         ,class-definition-form))
+    class-definition-form))
+
+(defmacro export-structure-p (class-definition-form)
+  `(export-p
+     (export-structure
+       ,class-definition-form)))
 
 (let ((hash (make-hash-table :test #'equalp)))
   (defun defenumtype (type)
@@ -60,7 +76,7 @@
 
   (OFPCID_UNDEFINED 0))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_header
   version
   type
@@ -127,7 +143,7 @@
   (OFPP_LOCAL #xfffffffe)
   (OFPP_ANY #xffffffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port
   port_no
   length
@@ -156,12 +172,12 @@
   (OFPPDPT_RECIRCULATE 4)
   (OFPPDPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_desc_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_desc_prop_ethernet
   type
   length
@@ -190,7 +206,7 @@
   (OFPPF_PAUSE (ash 1 14))
   (OFPPF_PAUSE_ASYM (ash 1 15)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_desc_prop_optical
   type
   length
@@ -210,19 +226,19 @@
   (OFPOPF_TX_PWR (ash 1 2))
   (OFPOPF_USE_FREQ (ash 1 3)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_desc_prop_oxm
   type
   length
   oxm_ids)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_desc_prop_recirculate
   type
   length
   port_nos)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_desc_prop_experimentar
   type
   length
@@ -230,7 +246,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_header_type
   namespace
   ns_type)
@@ -247,7 +263,7 @@
   (OFPHTO_NO_HEADER 1)
   (OFPHTO_OXM_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_match
   type
   length
@@ -325,12 +341,12 @@
   (OFPIEH_UNREP (ash 1 7))
   (OFPIEH_UNSEQ (ash 1 8)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_oxm_experimenter_header
   oxm_header
   experimenter)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_stats
   length
   oxs_fields)
@@ -346,7 +362,7 @@
   (OFPXST_ODB_PACKET_COUNT 4)
   (OFPXST_OFB_BYTE_COUNT 5))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_oxs_experimentar_header
   oxs_header
   experimenter)
@@ -361,31 +377,31 @@
   (OFPIT_STAT_TRIGGER 7)
   (OFPIT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_instruction_header
   type
   len)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_instruction_goto_table
   (type OFPIT_GOTO_TABLE)
   (len 8)
   table_id)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_instruction_write_metadata
   (type OFPIT_WRITE_METADATA)
   (len 24)
   metadata
   metadata_mask)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_instruction_actions
   type
   len
   actions)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_instruction_stat_trigger
   (type OFPIT_STAT_TRIGGER)
   len
@@ -396,7 +412,7 @@
   (OFPSTF_PERIODIC (ash 1 0))
   (OFPSTF_ONLY_FIRST (ash 1 1)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_instruction_experimenter_header
   (type OFPIT_EXPERIMENTER)
   len
@@ -423,12 +439,12 @@
   (OFPAT_METER 29)
   (OFPAT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_header
   type
   len)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_output
   (type OFPAT_OUTPUT)
   (len 16)
@@ -439,60 +455,60 @@
   (OFPCML_MAX #xffe5)
   (OFPCML_NO_BUFFER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_group
   (type OFPAT_GROUP)
   (len 8)
   group_id)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_set_queue
   (type OFPAT_SET_QUEUE)
   (len 8)
   queue_id)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_meter
   (type OFPAT_METER)
   (len 8)
   meter_id)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_mpls_ttl
   (type OFPAT_SET_MPLS_TTL)
   (len 8)
   mpls_ttl)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_generic
   type
   (len 8))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_nw_ttl
   (type OFPAT_SET_NW_TTL)
   (len 8)
   nw_ttl)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_push
   type
   (len 8)
   ethertype)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_pop_mpls
   (type OFPAT_POP_MPLS)
   (len 8)
   ethertype)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_set_field
   (type OFPAT_SET_FIELD)
   len
   field)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_copy_field
   (type OFPAT_COPY_FIELD)
   len
@@ -501,13 +517,13 @@
   dst_offset
   oxm_ids)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_experimenter_header
   (type OFPAT_EXPERIMENTER)
   len
   experimenter)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_controller_status
   length
   short_id
@@ -533,13 +549,13 @@
   (OFPCSRT_URI 0)
   (OFPCSRT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_controller_status_prop_uri
   (type OFPCSRT_URI)
   length
   uri)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_controller_status_prop_experimenter
   (type OFPCSRT_EXPERIMENTER)
   length
@@ -547,13 +563,13 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_experimenter_structure
   experimenter
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_switch_features
   header
   datapath_id
@@ -574,7 +590,7 @@
   (OFPC_BUNDLES (ash 1 9))
   (OFPC_FLOW_MONITORING (ash 1 10)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_switch_config
   header
   flags
@@ -590,7 +606,7 @@
   (OFPIT_MAX #xfe)
   (OIPIT_ALL #xff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_mod
   header
   table_id
@@ -607,12 +623,12 @@
   (OFPTMPT_VACANCY #x3)
   (OFPTMPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_mod_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_mod_prop_eviction
   (type OFPTMPT_EVICTION)
   length
@@ -623,7 +639,7 @@
   (OFPTMPEF_IMPORTANCE (ash 1 1))
   (OFPTMPEF_LIFETIME (ash 1 2)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_mod_prop_vacancy
   (type OFPTMPT_VACANCY)
   length
@@ -631,7 +647,7 @@
   vacancy_up
   vacancy)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_mod_prop_experimenter
   (type OFPTMPT_EXPERIMENTER)
   length
@@ -639,7 +655,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_mod
   header
   cookie
@@ -670,7 +686,7 @@
   (OFPFF_NO_PKT_COUNTS (ash 1 3))
   (OFPFF_NO_BYT_COUNTS (ash 1 4)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_mod
   header
   command
@@ -704,7 +720,7 @@
   (OFPG_BUCKET_LAST #xfffffffe)
   (OFPG_BUCKET_ALL #xffffffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bucket
   len
   action_array_len
@@ -717,24 +733,24 @@
   (OFPGBPT_WATCH_GROUP 2)
   (OFPGBPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_bucket_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_bukcet_prop_weight
   (type OFPGBPT_WEIGHT)
   (length 8)
   weight)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_bucket_prop_watch
   type
   (length 8)
   watch)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_bucket_prop_experimenter
   (type OFPGBPT_EXPERIMENTER)
   length
@@ -745,12 +761,12 @@
 (defconstants "ofp_group_prop_type"
   (OFPGPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_prop_experimenter
   (type OFPGPT_EXPERIMENTER)
   length
@@ -758,7 +774,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_mod
   header
   port_no
@@ -772,18 +788,18 @@
   (OFPPMPT_OPTICAL 1)
   (OFPPMPT_EXPERIMENTAL #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_mod_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_mod_prop_ethernet
   (type OFPPMPT_ETHERNET)
   length
   advertise)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_mod_prop_optical
   (type OFPPMPT_OPTICAL)
   length
@@ -793,7 +809,7 @@
   grid_span
   tx_pwr)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_mod_prop_experimenter
   (type OFPPMPT_EXPERIMENTAL)
   length
@@ -801,7 +817,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_mod
   header
   command
@@ -826,7 +842,7 @@
   (OFPMF_BURST (ash 1 2))
   (OFPMS_STATS (ash 1 3)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_band_handler
   type
   length
@@ -838,14 +854,14 @@
   (OFPMBT_DSCP_REMARK 2)
   (OFPMBT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_band_drop
   (type OFPMBT_DROP)
   (len 16)
   rate
   burst_size)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_band_dscp_remark
   (type OFPMBT_DSCP_REMARK)
   (len 16)
@@ -853,7 +869,7 @@
   burst_size
   prec_level)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_band_experimenter
   type
   len
@@ -861,14 +877,14 @@
   burst_size
   experimenter)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_multipart_request
   header
   type
   flags
   body)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_multipart_reply
   header
   type
@@ -904,7 +920,7 @@
   (OFPMP_BUNDLE_FEATURES 19)
   (OFPMP_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_desc
   mfr_desc
   hw_desc
@@ -912,7 +928,7 @@
   serial_num
   dp_desc)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_stats_request
   table_id
   out_port
@@ -921,7 +937,7 @@
   cookie_mask
   match)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_desc
   length
   table_id
@@ -933,7 +949,7 @@
   cookie
   match)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_stats_request
   table_id
   out_port
@@ -942,7 +958,7 @@
   cookie_mask
   match)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_stats
   length
   table_id
@@ -954,7 +970,7 @@
   (OFPFSR_STATS_REQUEST 0)
   (OFPFSR_STATS_TRIGGER 1))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_aggregate_stats_request
   table_id
   out_port
@@ -963,15 +979,15 @@
   cookie_mask
   match)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_aggregate_state_reply
   stats)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_multipart_request
   port_no)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_stats
   length
   port_no
@@ -992,12 +1008,12 @@
   (OFPPSPT_OPTICAL 1)
   (OFPPSPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_stats_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_stats_prop_ethernet
   (type OFPPSPT_ETHERNET)
   length
@@ -1006,7 +1022,7 @@
   rx_crc_err
   collisions)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_stats_prop_optical
   (type OFPPSPT_OPTICAL)
   length
@@ -1030,7 +1046,7 @@
   (OFPOSF_TX_BIAS (ash 1 5))
   (OFPOSF_TX_TEMP (ash 1 6)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_stats_prop_experimenter
   (type OFPPSPT_EXPERIMENTER)
   length
@@ -1038,12 +1054,12 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_multipart_request
   port_no
   queue_id)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_stats
   length
   port_no
@@ -1058,12 +1074,12 @@
 (defconstants "ofp_queue_stats_prop_type"
   (OFPQSPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_stats_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_stats_prop_experimenter
   (type OFPQSPT_EXPERIMENTER)
   length
@@ -1071,7 +1087,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_desc
   port_no
   queue_id
@@ -1082,24 +1098,24 @@
   (OFPQDPT_MAX_RATE 2)
   (OFPQDPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_desc_prop_handler
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_desc_prop_min_rate
   (type OFPQDPT_MIN_RATE)
   (length 8)
   rate)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_desc_prop_max_rate
   (type OFPQDPT_MAX_RATE)
   (length 8)
   rate)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_queue_desc_prop_experimenter
   (type OFPQDPT_EXPERIMENTER)
   length
@@ -1107,11 +1123,11 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_multipart_request
   group_id)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_state
   length
   group_id
@@ -1122,12 +1138,12 @@
   duration_nsec
   bucket_stats)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bucket_counter
   packet_count
   byte_count)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_desc
   length
   type
@@ -1135,7 +1151,7 @@
   bucket_array_len
   buckets)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_group_features
   type
   capabilities
@@ -1148,11 +1164,11 @@
   (OFPGFC_CHAINING (ash 1 2))
   (OFPGFC_CHAINING_CHECKS (ash 1 3)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_multipart_request
   meter_id)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_stats
   meter_id
   len
@@ -1163,19 +1179,19 @@
   duration_nsec
   band_stats)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_band_stats
   packet_band_count
   byte_band_count)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_desc
   length
   flags
   meter_id
   bands)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_meter_features
   max_meter
   band_types
@@ -1189,14 +1205,14 @@
   (OFPMFF_ANY_POSITION (ash 1 1))
   (OFPMFF_MULTI_LIST (ash 1 2)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_stats
   table_id
   active_count
   lookup_count
   matched_count)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_desc
   length
   table_id
@@ -1209,7 +1225,7 @@
   (OFPTFC_ENABLE 2)
   (OFPTFC_DISABLE 3))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_features
   length
   table_id
@@ -1251,54 +1267,54 @@
   (OFPTFPT_EXPERIMENTER #xfffe)
   (OFPTFPT_EXPERIMENTER_MISS #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_feature_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_feature_prop_instructions
   type
   length
   instruction_ids)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_instruction_id
   type
   len
   exp_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_feature_prop_tables
   type
   length
   table_ids)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_feature_prop_actions
   type
   length
   action_ids)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_action_id
   type
   len
   exp_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_feature_prop_oxm
   type
   length
   oxm_ids)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_feature_prop_oxm_values
   (type OFPTFPT_PACKET_TYPES)
   length
   oxm_values)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_feature_prop_experimenter
   type
   length
@@ -1306,7 +1322,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_monitor_request
   monitor_id
   out_port
@@ -1330,7 +1346,7 @@
   (OFPFMF_NO_ABBREV (ash 1 5))
   (OFPFMF_ONLY_OWN (ash 1 6)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_update_header
   length
   event)
@@ -1344,7 +1360,7 @@
   (OFPFME_PAUSED 5)
   (OFPFME_RESUMED 6))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_update_full
   length
   event
@@ -1356,18 +1372,18 @@
   cookie
   match)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_update_abbrev
   (length 8)
   (event OFPFME_ABBREV)
   xid)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_update_paused
   (length 8)
   event)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_features_request
   feature_request_flags
   properties)
@@ -1376,7 +1392,7 @@
   (OFPBF_TIMESTAMP (ash 1 0))
   (OFPBF_TIME_SET_SCHED (ash 1 1)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_features
   capabilities
   properties)
@@ -1386,7 +1402,7 @@
   (OFPBF_ORDERD (ash 1 1))
   (OFPBF_TIME (ash 1 2)))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_features_prop_header
   type
   length)
@@ -1395,7 +1411,7 @@
   (OFPTMPBF_TIME_CAPABILITY #x1)
   (OFPTMPBF_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_features_prop_time
   (type OFPTMPBF_TIME_CAPABILITY)
   length
@@ -1404,19 +1420,19 @@
   sched_max_past
   timestamp)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_experimenter_multipart_header
   experimenter
   exp_type)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_packet_out
   header
   buffer_id
   actions_len
   match)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_role_request
   header
   role
@@ -1429,7 +1445,7 @@
   (OFPCR_ROLE_MASTER 2)
   (OFPCR_ROLE_SLAVE 3))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_ctrl_msg
   header
   bundle_id
@@ -1447,7 +1463,7 @@
   (OFPBCT_DISCARD_REQUEST 6)
   (OFPBCT_DISCARD_REPLY 7))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_add_msg
   header
   bundle_id
@@ -1458,18 +1474,18 @@
   (OFPBPT_TIME 1)
   (OFPBPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_prop_time
   (type OFPBPT_TIME)
   (length 24)
   scheduled_time)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_bundle_prop_experimenter
   (type OFPBPT_EXPERIMENTER)
   length
@@ -1477,12 +1493,12 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_time
   second
   nanosecond)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_async_config
   header
   properties)
@@ -1507,18 +1523,18 @@
   (OFPACPT_EXPERIMENTER_SLAVE #xfffe)
   (OFPACPT_EXPERIMENTER_MASTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_async_config_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_async_config_prop_reasons
   type
   length
   mask)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_async_config_prop_experimenter
   type
   length
@@ -1526,7 +1542,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_packet_in
   header
   buffer_id
@@ -1544,7 +1560,7 @@
   (OFPR_GROUP 4)
   (OFPR_PACKET_OUT 5))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_flow_removed
   header
   table_id
@@ -1563,7 +1579,7 @@
   (OFPRR_METER_DELETE 4)
   (OFPRR_EVICTION 5))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_port_status
   header
   reason
@@ -1574,7 +1590,7 @@
   (OFPPR_DELETE 1)
   (OFPPR_MODIFY 2))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_role_status
   header
   role
@@ -1590,12 +1606,12 @@
 (defconstants "ofp_role_prop_type"
   (OFPRPT_EXPERIMENTER #xffff))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_role_prop_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_role_prop_experimenter
   (type OFPRPT_EXPERIMENTER)
   length
@@ -1603,7 +1619,7 @@
   exp_type
   experimenter_data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_table_status
   header
   reason
@@ -1613,7 +1629,7 @@
   (OFPTR_VACANCY_DOWN 3)
   (OFPTR_VACANCY_UP 4))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_requestforward_header
   header
   request)
@@ -1622,12 +1638,12 @@
   (OFPRFR_GROUP_MOD 0)
   (OFPRFR_METER_MOD 1))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_controller_status_header
   header
   status)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_hello
   header
   elements)
@@ -1635,18 +1651,57 @@
 (defconstants "ofp_hello_elem_type"
   (OFPHET_VERSIONBITMAP 1))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_hello_elem_header
   type
   length)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_hello_elem_versionbitmap
   (type OFPHET_VERSIONBITMAP)
   length
   bitmaps)
 
-@export-structure
+@export
+(defun make-ofp_hello-stream (header stream)
+  (let ((rest (- (ofp_header-length header) 8))
+        (elems '()))
+    (if (> rest 0)
+      (with-fast-input (buf nil stream)
+        (loop :do (let ((type (readu16-be buf))
+                        (length (readu16-be buf)))
+                    (if (= type OFPHET_VERSIONBITMAP)
+                      (let ((bitmaps '()))
+                        (loop :repeat (/ (- length 4) 4)
+                              :do (push (readu32-be buf) bitmaps))
+                        (push (make-ofp_hello_elem_version :type type
+                                                           :length length
+                                                           :bitmaps (reverse bitmaps))
+                              elems))
+                      (loop :repeat (- length 4)
+                            :do (readu8-be buf)))
+                    (setf rest (- rest length)))
+              :until (/= rest 0))))
+    (make-ofp_hello :header header :elements (reverse elems))))
+
+@export
+(defun dump-ofp_hello (ofp_hello)
+  (with-fast-output (buf)
+    (let ((header (ofp_hello-header ofp_hello)))
+      (writeu8-be (ofp_header-version header) buf)
+      (writeu8-be (ofp_header-type header) buf)
+      (writeu16-be (ofp_header-length header) buf)
+      (writeu32-be (ofp_header-xid header) buf)
+      (let ((elm (ofp_hello-elements ofp_hello)))
+        (loop :for e :in elm
+              :do (if (ofp_hello_elm_versionbitmap-p e)
+                    (progn
+                      (writeu16-be (ofp_hello_elm_versionbitmap-type e) buf)
+                      (writeu16-be (ofp_hello_elm_versionbitmap-length e) buf)
+                      (loop :for b :in (ofp_hello_elm_versionbitmap-bitmaps e)
+                            :do (writeu32-be b buf)))))))))
+
+@export-structure-p
 (defstruct ofp_error_msg
   header
   type
@@ -1876,7 +1931,7 @@
   (OFPBFC_SCHED_FUTURE 17)
   (OFPBFC_SCHED_PAST 18))
 
-@export-structure
+@export-structure-p
 (defstruct ofp_error_experimenter_msg
   header
   (type OFPET_EXPERIMENTER)
@@ -1884,7 +1939,7 @@
   experimenter
   data)
 
-@export-structure
+@export-structure-p
 (defstruct ofp_experimenter_msg
   header
   experimenter

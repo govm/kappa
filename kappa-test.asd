@@ -16,7 +16,8 @@
   :components ((:module "t"
                 :components
                 ((:test-file "kappa")
-                 (:test-file "define"))))
+                 (:test-file "define")
+                 (:test-file "util"))))
   :description "Test system for kappa"
 
   :defsystem-depends-on (:prove-asdf)

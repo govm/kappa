@@ -2,13 +2,18 @@
 
 OpenFlow Controller framework for Common Lisp
 
+> Kappa is a monster that has a special ability to handling water flow.
+
 ## Usage
 
-```common-lisp
-(kappa.server:start-server "0.0.0.0" 6653)
+```sh
+$ qlot install
+$ qlot exec ./sample.ros
 ```
 
 ## Require
+- Roswell
+- Qlot
 - libuv
 
 ## Installation

@@ -8,25 +8,22 @@
 |#
 
 (in-package :cl-user)
-(defpackage kappa-asd
+(defpackage kappa-sample-asd
   (:use :cl :asdf))
-(in-package :kappa-asd)
+(in-package :kappa-sample-asd)
 
-(defsystem kappa
+(defsystem kappa-sample
   :version "0.1"
   :author "Go Saito"
   :license "MIT"
-  :depends-on (:cl-async
+  :depends-on (:kappa
+               :cl-async
                :cl-annot
                :babel
-               :fast-io
-               :alexandria)
-  :components ((:module "src"
+               :fast-io)
+  :components ((:module "sample"
                 :components
-                ((:file "kappa")
-                 (:file "server" :depends-on ("define"))
-                 (:file "define")
-                 (:file "util" :depends-on ("define")))))
+                ((:file "sample"))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

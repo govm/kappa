@@ -3,9 +3,7 @@
   (:use :cl
         :kappa.define
         :prove))
-(in-package :kappa-test)
-
-(use-package :kappa.define)
+(in-package :kappa-test.define)
 
 (plan nil)
 

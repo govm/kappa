@@ -2,4 +2,5 @@ ql cl-async :latest
 ql cl-annot :latest
 ql babel :latest
 ql fast-io :latest
+ql alexandria :latest
 
