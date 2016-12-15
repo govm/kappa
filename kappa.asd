@@ -16,14 +16,14 @@
   :version "0.1"
   :author "Go Saito"
   :license "MIT"
-  :depends-on (:usocket
-               :portable-threads
-               :fast-http
-               :cl-annot)
+  :depends-on (:cl-async
+               :cl-annot
+               :babel
+               :fast-io)
   :components ((:module "src"
                 :components
                 ((:file "kappa")
-                 (:file "server")
+                 (:file "server" :depends-on ("define"))
                  (:file "define"))))
   :description ""
   :long-description

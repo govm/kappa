@@ -1,8 +1,19 @@
 # κ (kappa)
 
+OpenFlow Controller framework for Common Lisp
+
 ## Usage
 
+```common-lisp
+(kappa.server:start-server "0.0.0.0" 6653)
+```
+
+## Require
+- libuv
+
 ## Installation
+
+Put your common lisp load path.
 
 ## Author
 
