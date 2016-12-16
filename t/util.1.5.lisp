@@ -1,10 +1,12 @@
 (in-package :cl-user)
-(defpackage kappa-test.util
+(defpackage kappa-test.util.1.5
   (:use :cl
-        :kappa.define
-        :kappa.util
-        :prove))
-(in-package :kappa-test.util)
+        :kappa.define.1.5
+        :kappa.util.1.5
+        :prove)
+  (:import-from :kappa.define
+                :make-ofp_header))
+(in-package :kappa-test.util.1.5)
 
 (plan nil)
 

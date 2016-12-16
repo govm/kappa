@@ -1,6 +1,9 @@
 ql cl-async :latest
+ql cl-libuv :latest
 ql cl-annot :latest
 ql babel :latest
 ql fast-io :latest
 ql alexandria :latest
+ql cffi :latest
+ql anaphora :latest
 

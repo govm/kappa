@@ -1,21 +1,32 @@
 (in-package :cl-user)
 (defpackage kappa.util
   (:use :cl
-        :kappa.define)
-  (:export :get-versions))
+        :fast-io)
+  (:export :get-peername))
 (in-package :kappa.util)
 
-(defun get-versions (ofp_hello)
-  (let ((vs '())
-        (elms (ofp_hello-elements ofp_hello)))
-    (if elms
-      (loop :for e :in elms
-            :if (ofp_hello_elem_versionbitmap-p e)
-            :do (let ((bms (ofp_hello_elem_versionbitmap-bitmaps e)))
-                  (loop :for b :in bms
-                        :for bi :from 0
-                        :do (loop :for i :from 0 :to 31
-                                  :do (if (logbitp i b)
-                                        (push (+ (* bi 32) i) vs))))))
-      (push (ofp_header-version (ofp_hello-header ofp_hello)) vs))
-    vs))
+(defun %get-peername (socket)
+  (let ((uvstream (as:socket-c socket)))
+    (cffi:with-foreign-objects ((name :uint8 32) (namelen :int 1))
+      (setf (cffi:mem-aref namelen :int 0) 32)
+      (uv::uv-tcp-getpeername uvstream name namelen)
+      (with-fast-output (buf)
+        (loop :for i :from 0 :below (cffi:mem-aref namelen :int 0)
+              :do (fast-write-byte (cffi:mem-aref name :uint8 i) buf))))))
+
+(defun get-v4addr (buf)
+  (let ((port (readu16-be buf))
+        (addr (format nil "~A.~A.~A.~A"
+                      (fast-read-byte buf)
+                      (fast-read-byte buf)
+                      (fast-read-byte buf)
+                      (fast-read-byte buf))))
+    (list addr port)))
+
+(defun get-peername (socket)
+  (let ((sockaddr (%get-peername socket)))
+    (with-fast-input (buf sockaddr)
+      (let ((family (readu16-le buf)))
+        (if (= family 2) ; AF_INET
+          (get-v4addr buf)
+          sockaddr)))))

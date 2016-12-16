@@ -17,16 +17,28 @@
   :author "Go Saito"
   :license "MIT"
   :depends-on (:cl-async
+               :cl-libuv
                :cl-annot
                :babel
                :fast-io
-               :alexandria)
+               :alexandria
+               :cffi
+               :anaphora)
   :components ((:module "src"
                 :components
                 ((:file "kappa")
-                 (:file "server" :depends-on ("define"))
-                 (:file "define")
-                 (:file "util" :depends-on ("define")))))
+                 (:file "server" :depends-on ("define" "converter"
+                                              "define.1.0" "define.1.5"))
+                 (:file "define" :depends-on ("annot"))
+                 (:file "util")
+                 (:file "annot")
+                 (:file "converter" :depends-on ("define"))
+                 (:file "define.1.0" :depends-on ("annot"))
+                 (:file "converter.1.0" :depends-on ("define.1.0"))
+                 (:file "define.1.5" :depends-on ("annot"))
+                 (:file "converter.1.5" :depends-on ("define.1.5"))
+                 (:file "util.1.5" :depends-on ("define.1.5"))
+                 )))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

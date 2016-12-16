@@ -4,6 +4,8 @@ OpenFlow Controller framework for Common Lisp
 
 > Kappa is a monster that has a special ability to handling water flow.
 
+Note: It is very early stage, experimental, less than alpha quality.
+
 ## Usage
 
 ```sh
