@@ -29,7 +29,7 @@
 (defun hello-handler (socket header stream)
   (if (= (ofp_header-type header) OFPT_HELLO)
     (progn
-      ;(format t "HELLO ~A from ~A~&" header socket)
+      (format t "HELLO ~A from ~A~&" header socket)
       (let* ((hello (make-ofp_header :version OFP_VERSION
                                      :type OFPT_HELLO
                                      :length 8
@@ -48,7 +48,7 @@
 (defun features-reply-handler (socket header stream)
   (if (= (ofp_header-type header) OFPT_FEATURES_REPLY)
     (let* ((rep (make-ofp_switch_features-stream header stream)))
-      ;(format t "FEATURES_REPLY ~A from ~A~&" rep socket)
+      (format t "FEATURES_REPLY ~A from ~A~&" rep socket)
       t)
     nil))
 
@@ -70,6 +70,14 @@
       ;(format t "ECHO ~A from ~A~&" data socket)
       ;(format t "socket: ~A~&" (get-peername socket))
       (write-socket-data socket data)
+      t)
+    nil))
+
+@add-handler
+(defun port-status-handler (socket header stream)
+  (if (= (ofp_header-type header) OFPT_PORT_STATUS)
+    (let ((status (make-ofp_port_status-stream header stream)))
+      (format t "PORT STATUS ~A~&" status)
       t)
     nil))
 

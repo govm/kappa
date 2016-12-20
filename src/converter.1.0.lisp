@@ -128,3 +128,14 @@
                      (writeu16-be (ofp_action_output-port a) buf)
                      (writeu16-be (ofp_action_output-max_len a) buf)))
                   (t nil))))
+
+@export
+(defun make-ofp_port_status-stream (header stream)
+  (let ((rest (- (ofp_header-length header) 8)))
+    (with-fast-input (buf nil stream)
+      (make-ofp_port_status :header header
+                            :reason (readu8-be buf)
+                            :desc (progn
+                                    (loop :repeat 7
+                                          :do (readu8-be buf)) ; pad
+                                    (make-ofp_phy_port-buffer buf))))))

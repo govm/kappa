@@ -23,7 +23,8 @@
 
 (defun add-handler (handler)
   "handler takes (socket header stream)"
-  (push handler *handlers*))
+  (push handler *handlers*)
+  handler)
 
 (defvar *debug* nil)
 
