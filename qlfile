@@ -6,4 +6,4 @@ ql fast-io :latest
 ql alexandria :latest
 ql cffi :latest
 ql anaphora :latest
-
+ql flexi-streams :latest

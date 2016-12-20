@@ -20,7 +20,7 @@
                                 vec)
                      :name (let ((vec (make-octet-vector OFP_MAX_PORT_NAME_LEN)))
                              (fast-read-sequence vec buf 0 OFP_MAX_PORT_NAME_LEN)
-                             (octets-to-string vec))
+                             (octets-to-string vec :end (position 0 vec)))
                      :config (readu32-be buf)
                      :state (readu32-be buf)
                      :curr (readu32-be buf)
@@ -67,11 +67,13 @@
     (writeu16-be it buf)
     (writeu16-be 0 buf))
   (aif (ofp_match-dl_src match)
-    (fast-write-sequence it buf)
+    (loop :for i :across it
+          :do (fast-write-byte i buf))
     (loop :repeat OFP_ETH_ALEN
           :do (fast-write-byte 0 buf)))
   (aif (ofp_match-dl_dst match)
-    (fast-write-sequence it buf)
+    (loop :for i :across it
+          :do (fast-write-byte i buf))
     (loop :repeat OFP_ETH_ALEN
           :do (fast-write-byte 0 buf)))
   (aif (ofp_match-dl_vlan match)
