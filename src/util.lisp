@@ -32,7 +32,6 @@
           sockaddr)))))
 
 (defun adjust-length (data)
-  (let* ((len (length data))
-         (vec (with-fast-output (buf) (writeu16-be len buf))))
-    (setf (aref data 2) (aref vec 0))
-    (setf (aref data 3) (aref vec 1))))
+  (let ((len (length data)))
+    (setf (aref data 2) (logand #x00ff (ash len -8)))
+    (setf (aref data 3) (logand #x00ff len))))
