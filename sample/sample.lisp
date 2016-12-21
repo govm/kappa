@@ -8,7 +8,8 @@
                 :start-server
                 :add-handler)
   (:import-from :kappa.util
-                :get-peername)
+                :get-peername
+                :adjust-length)
   (:import-from :kappa.define
                 :make-ofp_header
                 :ofp_header-type
@@ -91,7 +92,7 @@
       (let* ((ports (ofp_switch_features-ports (socket-data socket)))
              (header (make-ofp_header :version OFP_VERSION
                                       :type OFPT_FLOW_MOD
-                                      :length (+ 72 (* (length ports) 8))
+                                      :length 0 ; set it later
                                       :xid (ofp_header-xid header)))
              (flow_mod (make-ofp_flow_mod :header header
                                           :match (make-ofp_match :wildcards (- OFPFW_ALL OFPFW_IN_PORT)
@@ -110,6 +111,7 @@
                                                                                           :port (ofp_phy_port-port_no p)
                                                                                           :max_len 0))))
              (data (with-fast-output (buf) (dump-ofp_flow_mod flow_mod buf))))
+        (adjust-length data)
         (write-socket-data socket data))
       t)
     nil))

@@ -30,3 +30,9 @@
         (if (= family 2) ; AF_INET
           (get-v4addr buf)
           sockaddr)))))
+
+(defun adjust-length (data)
+  (let* ((len (length data))
+         (vec (with-fast-output (buf) (writeu16-be len buf))))
+    (setf (aref data 2) (aref vec 0))
+    (setf (aref data 3) (aref vec 1))))
