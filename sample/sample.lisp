@@ -19,7 +19,8 @@
                 :dump-ofp_header
                 :make-ofp_header)
   (:import-from :cl-async
-                :write-socket-data)
+                :write-socket-data
+                :socket-data)
   (:export :run))
 (in-package :kappa-sample)
 
@@ -49,6 +50,7 @@
   (if (= (ofp_header-type header) OFPT_FEATURES_REPLY)
     (let* ((rep (make-ofp_switch_features-stream header stream)))
       (format t "FEATURES_REPLY ~A from ~A~&" rep socket)
+      (setf (socket-data socket) rep)
       t)
     nil))
 
@@ -86,9 +88,10 @@
   (if (= (ofp_header-type header) OFPT_PACKET_IN)
     (let ((body (make-ofp_packet_in-stream header stream)))
       ;(format t "PACKET_IN ~A from ~A~&" body socket)
-      (let* ((header (make-ofp_header :version OFP_VERSION
+      (let* ((ports (ofp_switch_features-ports (socket-data socket)))
+             (header (make-ofp_header :version OFP_VERSION
                                       :type OFPT_FLOW_MOD
-                                      :length 88
+                                      :length (+ 72 (* (length ports) 8))
                                       :xid (ofp_header-xid header)))
              (flow_mod (make-ofp_flow_mod :header header
                                           :match (make-ofp_match :wildcards (- OFPFW_ALL OFPFW_IN_PORT)
@@ -101,21 +104,19 @@
                                           :buffer_id (ofp_packet_in-buffer_id body)
                                           :out_port 0
                                           :flags 0
-                                          :actions (list (make-ofp_action_output :type OFPAT_OUTPUT
-                                                                                 :len 8
-                                                                                 :port 1
-                                                                                 :max_len 0)
-                                                         (make-ofp_action_output :type OFPAT_OUTPUT
-                                                                                 :len 8
-                                                                                 :port 2
-                                                                                 :max_len 0))))
+                                          :actions (loop :for p :in ports
+                                                         :collect (make-ofp_action_output :type OFPAT_OUTPUT
+                                                                                          :len 8
+                                                                                          :port (ofp_phy_port-port_no p)
+                                                                                          :max_len 0))))
              (data (with-fast-output (buf) (dump-ofp_flow_mod flow_mod buf))))
         (write-socket-data socket data))
       t)
     nil))
 
-;(sb-profile:profile "KAPPA.SERVER" "KAPPA.DEFINE.1.0" "KAPPA.CONVERTER.1.0" "KAPPA-SAMPLE" "FAST-IO" "CL-ASYNC")
 (defun run ()
   (let ((kappa.server:*debug* t))
-    (start-server) ))
-    ;(sb-profile:report)))
+    ;(sb-profile:profile "KAPPA.SERVER" "KAPPA.DEFINE.1.0" "KAPPA.CONVERTER.1.0" "KAPPA-SAMPLE" "FAST-IO" "CL-ASYNC")
+    (start-server)
+    ;(sb-profile:report)
+    ))
