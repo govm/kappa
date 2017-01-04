@@ -6,7 +6,9 @@
                 :ofp_header-type)
   (:import-from :kappa.server
                 :add-handler)
-  (:export :get-peername))
+  (:export :get-peername
+           :adjust-length
+           :defhandler))
 (in-package :kappa.util)
 
 (defun %get-peername (socket)
