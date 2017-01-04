@@ -16,7 +16,7 @@
   (make-in-memory-input-stream v))
 
 
-(plan 32)
+(plan 41)
 
 (let* ((h (make-ofp_header :version 1 :type OFPT_FEATURES_REPLY :length 80 :xid 0))
        (v #(1 0 1 0 0 1 0 1; datapath_id
@@ -161,6 +161,30 @@
   (is (ofp_error_msg-type b) OFPET_HELLO_FAILED)
   (is (ofp_error_msg-code b) OFPHFC_INCOMPATIBLE)
   (is (ofp_error_msg-data b) #(1 2 3 4) :test #'equalp)
+  (is-error (read-byte s) 'end-of-file))
+
+(let* ((h (make-ofp_header :version 1 :type OFPT_FLOW_REMOVED :length 88 :xid 0))
+       (v `#(,@(loop :repeat 40 :collect 0)
+             0 0 0 0 0 0 0 1
+             0 1
+             #.OFPRR_IDLE_TIMEOUT
+             0
+             1 2 3 4
+             4 3 2 1
+             0 1
+             0 0
+             0 0 0 0 0 0 0 1
+             1 0 0 0 0 0 0 0))
+       (s (vs v))
+       (b (make-ofp_flow_removed-stream h s)))
+  (is (ofp_flow_removed-cookie b) 1)
+  (is (ofp_flow_removed-priority b) 1)
+  (is (ofp_flow_removed-reason b) OFPRR_IDLE_TIMEOUT)
+  (is (ofp_flow_removed-duration_sec b) #x01020304)
+  (is (ofp_flow_removed-duration_nsec b) #x04030201)
+  (is (ofp_flow_removed-idle_timeout b) 1)
+  (is (ofp_flow_removed-packet_count b) 1)
+  (is (ofp_flow_removed-byte_count b) #x0100000000000000)
   (is-error (read-byte s) 'end-of-file))
 
 (finalize)

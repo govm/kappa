@@ -107,6 +107,30 @@
     (writeu16-be 0 buf)))
 
 @export
+(defun make-ofp_match-buffer (buf)
+  (make-ofp_match :wildcards (readu32-be buf)
+                  :in_port (readu16-be buf)
+                  :dl_src (let ((vec (make-octet-vector OFP_ETH_ALEN)))
+                            (fast-read-sequence vec buf 0 OFP_ETH_ALEN)
+                            vec)
+                  :dl_dst (let ((vec (make-octet-vector OFP_ETH_ALEN)))
+                            (fast-read-sequence vec buf 0 OFP_ETH_ALEN)
+                            vec)
+                  :dl_vlan (readu16-be buf)
+                  :dl_vlan_pcp (readu8-be buf)
+                  :dl_type (progn
+                             (readu8-be buf) ; pad
+                             (readu16-be buf))
+                  :nw_tos (readu8-be buf)
+                  :nw_proto (readu8-be buf)
+                  :nw_src (progn
+                            (readu16-be buf) ; pad
+                            (readu32-be buf))
+                  :nw_dst (readu32-be buf)
+                  :tp_src (readu16-be buf)
+                  :tp_dst (readu16-be buf)))
+
+@export
 (defun dump-ofp_flow_mod (mod buf)
   (dump-ofp_header (ofp_flow_mod-header mod) buf)
   (dump-ofp_match (ofp_flow_mod-match mod) buf)
@@ -130,6 +154,25 @@
                      (writeu16-be (ofp_action_output-port a) buf)
                      (writeu16-be (ofp_action_output-max_len a) buf)))
                   (t nil))))
+
+@export
+(defun make-ofp_flow_removed-stream (header stream)
+  (let ((rest (- (ofp_header-length header) 8)))
+    (with-fast-input (buf nil stream)
+      (make-ofp_flow_removed :header header
+                             :match (make-ofp_match-buffer buf)
+                             :cookie (readu64-be buf)
+                             :priority (readu16-be buf)
+                             :reason (readu8-be buf)
+                             :duration_sec (progn
+                                             (readu8-be buf) ; pad
+                                             (readu32-be buf))
+                             :duration_nsec (readu32-be buf)
+                             :idle_timeout (readu16-be buf)
+                             :packet_count (progn
+                                             (readu16-be buf) ; pad
+                                             (readu64-be buf))
+                             :byte_count (readu64-be buf)))))
 
 @export
 (defun make-ofp_port_status-stream (header stream)

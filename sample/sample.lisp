@@ -107,6 +107,14 @@
     nil))
 
 @add-handler
+(defun flow-removed-handler (socket header stream)
+  (if (= (ofp_header-type header) OFPT_FLOW_REMOVED)
+    (let ((body (make-ofp_flow_removed-stream header stream)))
+      ;(format t "FLOW REMOVED: ~A~&" body)
+      t)
+    nil))
+
+@add-handler
 (defun packet-in-handler (socket header stream)
   (if (= (ofp_header-type header) OFPT_PACKET_IN)
     (let ((body (make-ofp_packet_in-stream header stream)))
