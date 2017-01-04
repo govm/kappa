@@ -2,6 +2,10 @@
 (defpackage kappa.util
   (:use :cl
         :fast-io)
+  (:import-from :kappa.define
+                :ofp_header-type)
+  (:import-from :kappa.server
+                :add-handler)
   (:export :get-peername))
 (in-package :kappa.util)
 
@@ -35,3 +39,12 @@
   (let ((len (length data)))
     (setf (aref data 2) (logand #x00ff (ash len -8)))
     (setf (aref data 3) (logand #x00ff len))))
+
+(defmacro defhandler (name type triple &body body)
+  `(add-handler
+     (defun ,name ,triple
+       (if (= (ofp_header-type ,(cadr triple)) ,type)
+         (prog1
+           t
+           ,@body)
+         nil))))

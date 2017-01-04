@@ -30,7 +30,7 @@
                  (:file "server" :depends-on ("define" "converter"
                                               "define.1.0" "define.1.5"))
                  (:file "define" :depends-on ("annot"))
-                 (:file "util")
+                 (:file "util" :depends-on ("define" "server"))
                  (:file "annot")
                  (:file "converter" :depends-on ("define"))
                  (:file "define.1.0" :depends-on ("annot"))
