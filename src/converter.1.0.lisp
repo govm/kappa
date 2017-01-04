@@ -153,6 +153,56 @@
                      (writeu16-be (ofp_action_output-len a) buf)
                      (writeu16-be (ofp_action_output-port a) buf)
                      (writeu16-be (ofp_action_output-max_len a) buf)))
+                   ((ofp_action_enqueue-p a)
+                    (progn
+                      (writeu16-be (ofp_action_enqueue-type a) buf)
+                      (writeu16-be (ofp_action_enqueue-len a) buf)
+                      (writeu16-be (ofp_action_enqueue-port a) buf)
+                      (loop :repeat 6 :do (writeu8-be 0 buf)) ; pad
+                      (writeu32-be (ofp_action_enqueue-queue_id a) buf)))
+                   ((ofp_action_vlan_vid-p a)
+                    (progn
+                      (writeu16-be (ofp_action_vlan_vid-type a) buf)
+                      (writeu16-be (ofp_action_vlan_vid-len a) buf)
+                      (writeu16-be (ofp_action_vlan_vid-vlan_vid a) buf)
+                      (writeu16-be 0 buf))) ; pad
+                   ((ofp_action_vlan_pcp-p a)
+                    (progn
+                      (writeu16-be (ofp_action_vlan_pcp-type a) buf)
+                      (writeu16-be (ofp_action_vlan_pcp-len a) buf)
+                      (writeu8-be (ofp_action_vlan_pcp-vlan_pcp a) buf)
+                      (loop :repeat 3 :do (writeu8-be 0 buf)))) ; pad
+                   ((ofp_action_dl_addr-p a)
+                    (progn
+                      (writeu16-be (ofp_action_dl_addr-type a) buf)
+                      (writeu16-be (ofp_action_dl_addr-len a) buf)
+                      (loop :for i :across (ofp_action_dl_addr-dl_addr a)
+                            :do (fast-write-byte i buf))
+                      (loop :repeat 6 :do (writeu8-be 0 buf)))) ; pad
+                   ((ofp_action_nw_addr-p a)
+                    (progn
+                      (writeu16-be (ofp_action_nw_addr-type a) buf)
+                      (writeu16-be (ofp_action_nw_addr-len a) buf)
+                      (writeu32-be (ofp_action_nw_addr-nw_addr a) buf)))
+                   ((ofp_action_nw_tos-p a)
+                    (progn
+                      (writeu16-be (ofp_action_nw_tos-type a) buf)
+                      (writeu16-be (ofp_action_nw_tos-len a) buf)
+                      (writeu8-be (ofp_action_nw_tos-nw_tos a) buf)
+                      (loop :repeat 3 :do (writeu8-be 0 buf)))) ; pad
+                   ((ofp_action_tp_port-p a)
+                    (progn
+                      (writeu16-be (ofp_action_tp_port-type a) buf)
+                      (writeu16-be (ofp_action_tp_port-len a) buf)
+                      (writeu16-be (ofp_action_tp_port-tp_port a) buf)
+                      (writeu16-be 0 buf))) ; pad
+                   ((ofp_action_vendor_header-p a)
+                    (progn
+                      (writeu16-be (ofp_action_vendor_header-type a) buf)
+                      (writeu16-be (ofp_action_vendor_header-len a) buf)
+                      (writeu32-be (ofp_action_vendor_header-vendor a) buf)
+                      (loop :for i :across (ofp_action_vendor_header-body a)
+                            :do (fast-write-byte i buf))))
                   (t nil))))
 
 @export

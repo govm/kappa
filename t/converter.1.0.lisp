@@ -123,7 +123,34 @@
                              :actions (list (make-ofp_action_output :type OFPAT_OUTPUT
                                                                     :len 8
                                                                     :port 0
-                                                                    :max_len 16))))
+                                                                    :max_len 16)
+                                            (make-ofp_action_enqueue :type OFPAT_ENQUEUE
+                                                                     :len 16
+                                                                     :port 1
+                                                                     :queue_id 2)
+                                            (make-ofp_action_vlan_vid :type OFPAT_SET_VLAN_VID
+                                                                      :len 8
+                                                                      :vlan_vid 1)
+                                            (make-ofp_action_vlan_pcp :type OFPAT_SET_VLAN_PCP
+                                                                      :len 8
+                                                                      :vlan_pcp 1)
+                                            (make-ofp_action_dl_addr :type OFPAT_SET_DL_SRC
+                                                                     :len 16
+                                                                     :dl_addr #(0 1 2 3 4 5))
+                                            (make-ofp_action_nw_addr :type OFPAT_SET_NW_SRC
+                                                                     :len 8
+                                                                     :nw_addr 1)
+                                            (make-ofp_action_nw_tos :type OFPAT_SET_NW_TOS
+                                                                    :len 8
+                                                                    :nw_tos 1)
+                                            (make-ofp_action_tp_port :type OFPAT_SET_TP_SRC
+                                                                     :len 8
+                                                                     :tp_port 1)
+                                            (make-ofp_action_vendor_header :type OFPAT_VENDOR
+                                                                           :len 16
+                                                                           :vendor 1
+                                                                           :body #(0 1 2 3 4 5 6 7))
+                                            )))
        (expect `#(1 #.OFPT_FLOW_MOD 0 8 0 0 0 0
                   ,@(loop :repeat 40 :collect 0)
                   0 0 0 0 1 0 0 1
@@ -137,7 +164,39 @@
                   0 #.OFPAT_OUTPUT
                   0 8
                   0 0
-                  0 16))
+                  0 16
+                  0 #.OFPAT_ENQUEUE
+                  0 16
+                  0 1
+                  0 0 0 0 0 0
+                  0 0 0 2
+                  0 #.OFPAT_SET_VLAN_VID
+                  0 8
+                  0 1
+                  0 0
+                  0 #.OFPAT_SET_VLAN_PCP
+                  0 8
+                  1
+                  0 0 0
+                  0 #.OFPAT_SET_DL_SRC
+                  0 16
+                  0 1 2 3 4 5
+                  0 0 0 0 0 0
+                  0 #.OFPAT_SET_NW_SRC
+                  0 8
+                  0 0 0 1
+                  0 #.OFPAT_SET_NW_TOS
+                  0 8
+                  1
+                  0 0 0
+                  0 #.OFPAT_SET_TP_SRC
+                  0 8
+                  0 1
+                  0 0
+                  255 255 ; OFPAT_VENDOR
+                  0 16
+                  0 0 0 1
+                  0 1 2 3 4 5 6 7))
        (dump (with-fast-output (buf) (dump-ofp_flow_mod f buf))))
   (is dump expect :test #'equalp))
 

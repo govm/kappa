@@ -264,7 +264,8 @@
 (defstruct ofp_action_vendor_header
   (type OFPAT_VENDOR)
   len
-  vendor)
+  vendor
+  body)
 
 @export-structure-p
 (defstruct ofp_switch_features
