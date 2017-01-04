@@ -85,6 +85,28 @@
     nil))
 
 @add-handler
+(defun error-msg-handler (socket header stream)
+  (if (= (ofp_header-type header) OFPT_ERROR)
+    (let* ((e (make-ofp_error_msg-stream header stream))
+           (type (ofp_error_msg-type e))
+           (code (ofp_error_msg-code e)))
+      (format t "ERROR: ~A" (get-constant-name "ofp_error_type" type))
+      (cond ((= type OFPET_HELLO_FAILED)
+             (format t ".~A~&" (get-constant-name "ofp_hello_failed_code" code)))
+            ((= type OFPET_BAD_REQUEST)
+             (format t ".~A~&" (get-constant-name "ofp_bad_request_code" code)))
+            ((= type OFPET_BAD_ACTION)
+             (format t ".~A~&" (get-constant-name "ofp_bad_action_code" code)))
+            ((= type OFPET_FLOW_MOD_FAILED)
+             (format t ".~A~&" (get-constant-name "ofp_flow_mod_failed_code" code)))
+            ((= type OFPET_PORT_MOD_FAILED)
+             (format t ".~A~&" (get-constant-name "ofp_port_mod_failed_code" code)))
+            ((= type OFPET_QUEUE_OP_FAILED)
+             (format t ".~A~&" (get-constant-name "ofp_queue_op_failed_code" code))))
+      t)
+    nil))
+
+@add-handler
 (defun packet-in-handler (socket header stream)
   (if (= (ofp_header-type header) OFPT_PACKET_IN)
     (let ((body (make-ofp_packet_in-stream header stream)))

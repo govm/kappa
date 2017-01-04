@@ -141,3 +141,14 @@
                                     (loop :repeat 7
                                           :do (readu8-be buf)) ; pad
                                     (make-ofp_phy_port-buffer buf))))))
+
+@export
+(defun make-ofp_error_msg-stream (header stream)
+  (let ((rest (- (ofp_header-length header) 8)))
+    (with-fast-input (buf nil stream)
+      (make-ofp_error_msg :header header
+                          :type (readu16-be buf)
+                          :code (readu16-be buf)
+                          :data (let ((vec (make-octet-vector (- rest 4))))
+                                  (fast-read-sequence vec buf 0 (- rest 4))
+                                  vec)))))

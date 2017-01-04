@@ -16,7 +16,7 @@
   (make-in-memory-input-stream v))
 
 
-(plan 28)
+(plan 32)
 
 (let* ((h (make-ofp_header :version 1 :type OFPT_FEATURES_REPLY :length 80 :xid 0))
        (v #(1 0 1 0 0 1 0 1; datapath_id
@@ -150,6 +150,17 @@
        (b (make-ofp_port_status-stream h s)))
   (is (ofp_port_status-reason b) OFPPR_ADD)
   (is-type (ofp_port_status-desc b) 'ofp_phy_port)
+  (is-error (read-byte s) 'end-of-file))
+
+(let* ((h (make-ofp_header :version 1 :type OFPT_ERROR :length 16 :xid 0))
+       (v `#(0 #.OFPET_HELLO_FAILED
+             0 #.OFPHFC_INCOMPATIBLE
+             1 2 3 4))
+       (s (vs v))
+       (b (make-ofp_error_msg-stream h s)))
+  (is (ofp_error_msg-type b) OFPET_HELLO_FAILED)
+  (is (ofp_error_msg-code b) OFPHFC_INCOMPATIBLE)
+  (is (ofp_error_msg-data b) #(1 2 3 4) :test #'equalp)
   (is-error (read-byte s) 'end-of-file))
 
 (finalize)
