@@ -16,7 +16,7 @@
   (make-in-memory-input-stream v))
 
 
-(plan 45)
+(plan 46)
 
 (let* ((h (make-ofp_header :version 1 :type OFPT_FEATURES_REPLY :length 80 :xid 0))
        (v #(1 0 1 0 0 1 0 1; datapath_id
@@ -259,6 +259,23 @@
        (expect #(1 #.OFPT_SET_CONFIG 0 16 0 0 0 0
                  0 1 1 0))
        (dump (with-fast-output (buf) (dump-ofp_switch_config c buf))))
+  (is dump expect :test #'equalp))
+
+(let* ((h (make-ofp_header :version 1 :type OFPT_PORT_MOD :length 32 :xid 0))
+       (m (make-ofp_port_mod :header h
+                             :port_no 1
+                             :hw_addr #(0 1 2 3 4 5)
+                             :config 1
+                             :mask #xffffffff
+                             :advertise 1))
+       (expect #(1 #.OFPT_PORT_MOD 0 32 0 0 0 0
+                 0 1
+                 0 1 2 3 4 5
+                 0 0 0 1
+                 255 255 255 255
+                 0 0 0 1
+                 0 0 0 0))
+       (dump (with-fast-output (buf) (dump-ofp_port_mod m buf))))
   (is dump expect :test #'equalp))
 
 (finalize)

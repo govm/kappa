@@ -58,6 +58,17 @@
   (writeu16-be (ofp_switch_config-miss_send_len config) buf))
 
 @export
+(defun dump-ofp_port_mod (mod buf)
+  (dump-ofp_header (ofp_port_mod-header mod) buf)
+  (writeu16-be (ofp_port_mod-port_no mod) buf)
+  (loop :for i :across (ofp_port_mod-hw_addr mod)
+        :do (writeu8-be i buf))
+  (writeu32-be (ofp_port_mod-config mod) buf)
+  (writeu32-be (ofp_port_mod-mask mod) buf)
+  (writeu32-be (ofp_port_mod-advertise mod) buf)
+  (writeu32-be 0 buf)) ; pad
+
+@export
 (defun make-ofp_packet_in-stream (header stream)
   (let ((rest (- (ofp_header-length header) 8)))
     (with-fast-input (buf nil stream)
