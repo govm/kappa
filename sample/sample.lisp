@@ -21,7 +21,8 @@
                 :make-ofp_header)
   (:import-from :cl-async
                 :write-socket-data
-                :socket-data)
+                :socket-data
+                :with-delay)
   (:export :run))
 (in-package :kappa-sample)
 
@@ -50,11 +51,28 @@
                                           :type OFPT_GET_CONFIG_REQUEST
                                           :length 8
                                           :xid (ofp_header-xid header))
-                         buf)))))
+                         buf))))
+  (with-delay (30)
+    (let ((h (make-ofp_header :version OFP_VERSION
+                              :type OFPT_STATS_REQUEST
+                              :length 0
+                              :xid (ofp_header-xid header))))
+      (let ((data (with-fast-output (buf)
+                    (dump-ofp_stats_request (make-ofp_stats_request :header h
+                                                                    :type OFPST_PORT
+                                                                    :flags 1
+                                                                    :body (make-ofp_port_stats_request :port_no 1))
+                                            buf))))
+        (adjust-length data)
+        (write-socket-data socket data)))))
 
 (defhandler get-config-reply-handler OFPT_GET_CONFIG_REPLY (socket header stream)
   (let ((rep (make-ofp_switch_config-stream header stream)))
     (format t "GET_CONFIG_REPLY ~A~&" rep)))
+
+(defhandler stats-reply-handler OFPT_STATS_REPLY (socket header stream)
+  (let ((rep (make-ofp_stats_reply-stream header stream)))
+    (format t "STATS_REPLY ~A~&" rep)))
 
 (defhandler echo-handler OFPT_ECHO_REQUEST (socket header stream)
   (let* ((body-len (- (ofp_header-length header) 8))

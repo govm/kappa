@@ -16,7 +16,7 @@
   (make-in-memory-input-stream v))
 
 
-(plan 46)
+(plan 47)
 
 (let* ((h (make-ofp_header :version 1 :type OFPT_FEATURES_REPLY :length 80 :xid 0))
        (v #(1 0 1 0 0 1 0 1; datapath_id
@@ -28,8 +28,8 @@
             ; ofp_phy_port
             0 1; port_no
             1 2 3 4 5 6; hw_addr
-            #.(char-int #\s)
-            #.(char-int #\0)
+            #.(char-code #\s)
+            #.(char-code #\0)
             0 0 0 0 0 0 0 0 0 0 0 0 0 0; name
             0 1 0 1; config
             1 0 1 0; state
@@ -277,5 +277,240 @@
                  0 0 0 0))
        (dump (with-fast-output (buf) (dump-ofp_port_mod m buf))))
   (is dump expect :test #'equalp))
+
+(subtest "ofp_stats"
+  (let* ((h (make-ofp_header :version 1 :type OFPT_STATS_REQUEST :length 0 :xid 0)))
+    (let* ((req (make-ofp_stats_request :header h
+                                        :type OFPST_DESC
+                                        :flags 1
+                                        :body nil))
+           (expect #(1 #.OFPT_STATS_REQUEST 0 0 0 0 0 0
+                     0 #.OFPST_DESC 0 1))
+           (dump (with-fast-output (buf) (dump-ofp_stats_request req buf))))
+      (is dump expect :test #'equalp))
+    (let* ((req (make-ofp_stats_request :header h
+                                        :type OFPST_FLOW
+                                        :flags 1
+                                        :body (make-ofp_flow_stats_request :match (make-ofp_match)
+                                                                           :table_id 1
+                                                                           :out_port 2)))
+           (expect `#(1 #.OFPT_STATS_REQUEST 0 0 0 0 0 0
+                      0 #.OFPST_FLOW 0 1
+                      ,@(loop :repeat 40 :collect 0)
+                      1
+                      0
+                      0 2))
+           (dump (with-fast-output (buf) (dump-ofp_stats_request req buf))))
+      (is dump expect :test #'equalp))
+    (let* ((req (make-ofp_stats_request :header h
+                                        :type OFPST_AGGREGATE
+                                        :flags 1
+                                        :body (make-ofp_aggregate_stats_request :match (make-ofp_match)
+                                                                                :table_id 1
+                                                                                :out_port 2)))
+           (expect `#(1 #.OFPT_STATS_REQUEST 0 0 0 0 0 0
+                      0 #.OFPST_AGGREGATE 0 1
+                      ,@(loop :repeat 40 :collect 0)
+                      1
+                      0
+                      0 2))
+           (dump (with-fast-output (buf) (dump-ofp_stats_request req buf))))
+      (is dump expect :test #'equalp))
+    (let* ((req (make-ofp_stats_request :header h
+                                        :type OFPST_TABLE
+                                        :flags 1
+                                        :body nil))
+           (expect #(1 #.OFPT_STATS_REQUEST 0 0 0 0 0 0
+                     0 #.OFPST_TABLE 0 1))
+           (dump (with-fast-output (buf) (dump-ofp_stats_request req buf))))
+      (is dump expect :test #'equalp))
+    (let* ((req (make-ofp_stats_request :header h
+                                        :type OFPST_PORT
+                                        :flags 1
+                                        :body (make-ofp_port_stats_request :port_no 1)))
+           (expect #(1 #.OFPT_STATS_REQUEST 0 0 0 0 0 0
+                     0 #.OFPST_PORT 0 1
+                     0 1
+                     0 0 0 0 0 0))
+           (dump (with-fast-output (buf) (dump-ofp_stats_request req buf))))
+      (is dump expect :test #'equalp))
+    (let* ((req (make-ofp_stats_request :header h
+                                        :type OFPST_QUEUE
+                                        :flags 1
+                                        :body (make-ofp_queue_stats_request :port_no 1
+                                                                            :queue_id 2)))
+           (expect #(1 #.OFPT_STATS_REQUEST 0 0 0 0 0 0
+                     0 #.OFPST_QUEUE 0 1
+                     0 1
+                     0 0
+                     0 0 0 2))
+           (dump (with-fast-output (buf) (dump-ofp_stats_request req buf))))
+      (is dump expect :test #'equalp))
+    (let* ((req (make-ofp_stats_request :header h
+                                        :type OFPST_VENDOR
+                                        :flags 1
+                                        :body #(0 1 2 3)))
+           (expect #(1 #.OFPT_STATS_REQUEST 0 0 0 0 0 0
+                     255 255 0 1
+                     0 1 2 3))
+           (dump (with-fast-output (buf) (dump-ofp_stats_request req buf))))
+      (is dump expect :test #'equalp)))
+  (let* ((h (make-ofp_header :version 1 :type OFPT_STATS_REPLY :length 0 :xid 0)))
+    (let* ((v `#(0 #.OFPST_DESC 0 1
+                 ,@(mapcar #'(lambda (c) (char-code c)) '(#\m #\f #\r))
+                 ,@(loop :repeat (- DESC_STR_LEN 3) :collect 0)
+                 ,@(mapcar #'(lambda (c) (char-code c)) '(#\h #\w))
+                 ,@(loop :repeat (- DESC_STR_LEN 2) :collect 0)
+                 ,@(mapcar #'(lambda (c) (char-code c)) '(#\s #\w))
+                 ,@(loop :repeat (- DESC_STR_LEN 2) :collect 0)
+                 ,@(mapcar #'(lambda (c) (char-code c)) '(#\s #\e #\r #\i #\a #\l))
+                 ,@(loop :repeat (- SERIAL_NUM_LEN 6) :collect 0)
+                 ,@(mapcar #'(lambda (c) (char-code c)) '(#\d #\p))
+                 ,@(loop :repeat (- DESC_STR_LEN 2) :collect 0)))
+           (s (vs v))
+           (b (make-ofp_stats_reply-stream h s)))
+      (is (ofp_stats_reply-type b) OFPST_DESC)
+      (is (ofp_stats_reply-flags b) 1)
+      (let ((bb (ofp_stats_reply-body b)))
+        (ok (ofp_desc_stats-p bb))
+        (is (ofp_desc_stats-mfr_desc bb) "mfr" :test #'string=)
+        (is (ofp_desc_stats-hw_desc bb) "hw" :test #'string=)
+        (is (ofp_desc_stats-sw_desc bb) "sw" :test #'string=)
+        (is (ofp_desc_stats-serial_num bb) "serial" :test #'string=)
+        (is (ofp_desc_stats-dp_desc bb) "dp" :test #'string=))
+      (is-error (read-byte s) 'end-of-file))
+    (let* ((v `#(0 #.OFPST_FLOW 0 1
+                 0 112
+                 1
+                 0
+                 ,@(loop :repeat 40 :collect 0)
+                 0 0 0 1
+                 0 0 1 0
+                 0 1
+                 0 2
+                 0 3
+                 0 0 0 0 0 0
+                 0 0 0 0 0 0 0 1
+                 0 0 0 0 0 0 1 0
+                 0 0 0 0 0 1 0 0
+                 0 #.OFPAT_OUTPUT 0 8 0 1 0 0
+                 0 #.OFPAT_ENQUEUE 0 44 0 1 0 0 0 0 0 0 0 0 0 1))
+           (s (vs v))
+           (b (make-ofp_stats_reply-stream h s)))
+      (is (ofp_stats_reply-type b) OFPST_FLOW)
+      (let ((bb (ofp_stats_reply-body b)))
+        (ok (ofp_flow_stats-p bb))
+        (is (ofp_flow_stats-length bb) 112)
+        (is (ofp_flow_stats-table_id bb) 1)
+        (ok (ofp_match-p (ofp_flow_stats-match bb)))
+        (is (ofp_flow_stats-duration_sec bb) 1)
+        (is (ofp_flow_stats-duration_nsec bb) #x100)
+        (is (ofp_flow_stats-priority bb) 1)
+        (is (ofp_flow_stats-idle_timeout bb) 2)
+        (is (ofp_flow_stats-hard_timeout bb) 3)
+        (is (ofp_flow_stats-cookie bb) 1)
+        (is (ofp_flow_stats-packet_count bb) #x100)
+        (is (ofp_flow_stats-byte_count bb) #x10000)
+        (ok (ofp_action_output-p (car (ofp_flow_stats-actions bb))))
+        (ok (ofp_action_enqueue-p (cadr (ofp_flow_stats-actions bb)))))
+      (is-error (read-byte s) 'end-of-file))
+    (let* ((v #(0 #.OFPST_AGGREGATE 0 1
+                0 0 0 0 0 0 0 1
+                0 0 0 0 0 0 1 0
+                0 0 0 1
+                0 0 0 0))
+           (s (vs v))
+           (b (make-ofp_stats_reply-stream h s)))
+      (is (ofp_stats_reply-type b) OFPST_AGGREGATE)
+      (let ((bb (ofp_stats_reply-body b)))
+        (ok (ofp_aggregate_stats_reply-p bb))
+        (is (ofp_aggregate_stats_reply-packet_count bb) 1)
+        (is (ofp_aggregate_stats_reply-byte_count bb) #x100)
+        (is (ofp_aggregate_stats_reply-flow_count bb) 1))
+      (is-error (read-byte s) 'end-of-file))
+    (let* ((v `#(0 #.OFPST_TABLE 0 1
+                 1
+                 0 0 0
+                 ,(char-code #\s) ,@(loop :repeat (- OFP_MAX_TABLE_NAME_LEN 1) :collect 0)
+                 0 0 0 1
+                 0 0 0 2
+                 0 0 0 3
+                 0 0 0 0 0 0 0 4
+                 0 0 0 0 0 0 0 5))
+           (s (vs v))
+           (b (make-ofp_stats_reply-stream h s)))
+      (is (ofp_stats_reply-type b) OFPST_TABLE)
+      (let ((bb (ofp_stats_reply-body b)))
+        (ok (ofp_table_stats-p bb))
+        (is (ofp_table_stats-table_id bb) 1)
+        (is (ofp_table_stats-name bb) "s" :test #'equalp)
+        (is (ofp_table_stats-wildcards bb) 1)
+        (is (ofp_table_stats-max_entries bb) 2)
+        (is (ofp_table_stats-active_count bb) 3)
+        (is (ofp_table_stats-lookup_count bb) 4)
+        (is (ofp_table_stats-matched_count bb) 5))
+      (is-error (read-byte s) 'end-of-file))
+    (let* ((v #(0 #.OFPST_PORT 0 1
+                0 1
+                0 0 0 0 0 0
+                0 0 0 0 0 0 0 1
+                0 0 0 0 0 0 0 2
+                0 0 0 0 0 0 0 3
+                0 0 0 0 0 0 0 4
+                0 0 0 0 0 0 0 5
+                0 0 0 0 0 0 0 6
+                0 0 0 0 0 0 0 7
+                0 0 0 0 0 0 0 8
+                0 0 0 0 0 0 0 9
+                0 0 0 0 0 0 0 10
+                0 0 0 0 0 0 0 11
+                0 0 0 0 0 0 0 12))
+           (s (vs v))
+           (b (make-ofp_stats_reply-stream h s)))
+      (is (ofp_stats_reply-type b) OFPST_PORT)
+      (let ((bb (ofp_stats_reply-body b)))
+        (ok (ofp_port_stats-p bb))
+        (is (ofp_port_stats-port_no bb) 1)
+        (is (ofp_port_stats-rx_packets bb) 1)
+        (is (ofp_port_stats-tx_packets bb) 2)
+        (is (ofp_port_stats-rx_bytes bb) 3)
+        (is (ofp_port_stats-tx_bytes bb) 4)
+        (is (ofp_port_stats-rx_dropped bb) 5)
+        (is (ofp_port_stats-tx_dropped bb) 6)
+        (is (ofp_port_stats-rx_errors bb) 7)
+        (is (ofp_port_stats-tx_errors bb) 8)
+        (is (ofp_port_stats-rx_frame_err bb) 9)
+        (is (ofp_port_stats-rx_over_err bb) 10)
+        (is (ofp_port_stats-rx_crc_err bb) 11)
+        (is (ofp_port_stats-collisions bb) 12))
+      (is-error (read-byte s) 'end-of-file))
+    (let* ((v #(0 #.OFPST_QUEUE 0 1
+                0 1
+                0 0
+                0 0 0 1
+                0 0 0 0 0 0 0 1
+                0 0 0 0 0 0 0 2
+                0 0 0 0 0 0 0 3))
+           (s (vs v))
+           (b (make-ofp_stats_reply-stream h s)))
+      (is (ofp_stats_reply-type b) OFPST_QUEUE)
+      (let ((bb (ofp_stats_reply-body b)))
+        (ok (ofp_queue_stats-p bb))
+        (is (ofp_queue_stats-port_no bb) 1)
+        (is (ofp_queue_stats-queue_id bb) 1)
+        (is (ofp_queue_stats-tx_bytes bb) 1)
+        (is (ofp_queue_stats-tx_packets bb) 2)
+        (is (ofp_queue_stats-tx_errors bb) 3))
+      (is-error (read-byte s) 'end-of-file))
+    (let* ((v #(255 255 0 1
+                0 1 2 3))
+           (s (vs v))
+           (h (make-ofp_header :version 1 :type OFPT_STATS_REPLY :length 16 :xid 0))
+           (b (make-ofp_stats_reply-stream h s)))
+      (is (ofp_stats_reply-type b) OFPST_VENDOR)
+      (let ((bb (ofp_stats_reply-body b)))
+        (ok (vectorp bb))
+        (is bb #(0 1 2 3) :test #'equalp))
+      (is-error (read-byte s) 'end-of-file))))
 
 (finalize)

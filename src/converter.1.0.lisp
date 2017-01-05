@@ -69,6 +69,131 @@
   (writeu32-be 0 buf)) ; pad
 
 @export
+(defun dump-ofp_stats_request (req buf)
+  (dump-ofp_header (ofp_stats_request-header req) buf)
+  (writeu16-be (ofp_stats_request-type req) buf)
+  (writeu16-be (ofp_stats_request-flags req) buf)
+  (let ((b (ofp_stats_request-body req)))
+    (cond ((ofp_flow_stats_request-p b)
+           (progn
+             (dump-ofp_match (ofp_flow_stats_request-match b) buf)
+             (writeu8-be (ofp_flow_stats_request-table_id b) buf)
+             (writeu8-be 0 buf) ; pad
+             (writeu16-be (ofp_flow_stats_request-out_port b) buf)))
+          ((ofp_aggregate_stats_request-p b)
+           (progn
+             (dump-ofp_match (ofp_aggregate_stats_request-match b) buf)
+             (writeu8-be (ofp_aggregate_stats_request-table_id b) buf)
+             (writeu8-be 0 buf) ; pad
+             (writeu16-be (ofp_aggregate_stats_request-out_port b) buf)))
+          ((ofp_port_stats_request-p b)
+           (progn
+             (writeu16-be (ofp_port_stats_request-port_no b) buf)
+             (loop :repeat 6 :do (writeu8-be 0 buf)))) ; pad
+          ((ofp_queue_stats_request-p b)
+           (progn
+             (writeu16-be (ofp_queue_stats_request-port_no b) buf)
+             (writeu16-be 0 buf) ; pad
+             (writeu32-be (ofp_queue_stats_request-queue_id b) buf)))
+          ((vectorp b)
+           (loop :for i :across b :do (fast-write-byte i buf))))))
+
+@export
+(defun make-ofp_stats_reply-stream (header stream)
+  (with-fast-input (buf nil stream)
+    (let* ((rep (make-ofp_stats_reply :header header
+                                      :type (readu16-be buf)
+                                      :flags (readu16-be buf)
+                                      :body nil))
+           (type (ofp_stats_reply-type rep)))
+      (setf (ofp_stats_reply-body rep)
+            (cond ((= type OFPST_DESC)
+                   (make-ofp_desc_stats :mfr_desc (let ((vec (make-octet-vector DESC_STR_LEN)))
+                                                    (fast-read-sequence vec buf 0 DESC_STR_LEN)
+                                                    (octets-to-string vec :end (position 0 vec)))
+                                        :hw_desc (let ((vec (make-octet-vector DESC_STR_LEN)))
+                                                   (fast-read-sequence vec buf 0 DESC_STR_LEN)
+                                                   (octets-to-string vec :end (position 0 vec)))
+                                        :sw_desc (let ((vec (make-octet-vector DESC_STR_LEN)))
+                                                   (fast-read-sequence vec buf 0 DESC_STR_LEN)
+                                                   (octets-to-string vec :end (position 0 vec)))
+                                        :serial_num (let ((vec (make-octet-vector SERIAL_NUM_LEN)))
+                                                      (fast-read-sequence vec buf 0 SERIAL_NUM_LEN)
+                                                      (octets-to-string vec :end (position 0 vec)))
+                                        :dp_desc (let ((vec (make-octet-vector DESC_STR_LEN)))
+                                                   (fast-read-sequence vec buf 0 DESC_STR_LEN)
+                                                   (octets-to-string vec :end (position 0 vec)))))
+                  ((= type OFPST_FLOW)
+                   (let ((flow (make-ofp_flow_stats :length (readu16-be buf)
+                                                    :table_id (readu8-be buf)
+                                                    :match (progn
+                                                             (readu8-be buf) ; pad
+                                                             (make-ofp_match-buffer buf))
+                                                    :duration_sec (readu32-be buf)
+                                                    :duration_nsec (readu32-be buf)
+                                                    :priority (readu16-be buf)
+                                                    :idle_timeout (readu16-be buf)
+                                                    :hard_timeout (readu16-be buf)
+                                                    :cookie (progn
+                                                              (loop :repeat 6 :do (readu8-be buf)) ; pad
+                                                              (readu64-be buf))
+                                                    :packet_count (readu64-be buf)
+                                                    :byte_count (readu64-be buf)
+                                                    :actions nil)))
+                     (setf (ofp_flow_stats-actions flow) (make-ofp_actions-buffer buf
+                                                                                  (- (ofp_flow_stats-length flow) 88)))
+                     flow))
+                  ((= type OFPST_AGGREGATE)
+                   (make-ofp_aggregate_stats_reply :packet_count (readu64-be buf)
+                                                   :byte_count (readu64-be buf)
+                                                   :flow_count (prog1
+                                                                 (readu32-be buf)
+                                                                 (readu32-be buf)))) ;pad
+                  ((= type OFPST_TABLE)
+                   (make-ofp_table_stats :table_id (readu8-be buf)
+                                         :name (progn
+                                                 (loop :repeat 3 :do (readu8-be buf)) ; pad
+                                                 (let ((vec (make-octet-vector OFP_MAX_TABLE_NAME_LEN)))
+                                                   (fast-read-sequence vec buf 0 OFP_MAX_TABLE_NAME_LEN)
+                                                   (octets-to-string vec :end (position 0 vec))))
+                                         :wildcards (readu32-be buf)
+                                         :max_entries (readu32-be buf)
+                                         :active_count (readu32-be buf)
+                                         :lookup_count (readu64-be buf)
+                                         :matched_count (readu64-be buf)))
+                  ((= type OFPST_PORT)
+                   (make-ofp_port_stats :port_no (readu16-be buf)
+                                        :rx_packets (progn
+                                                      (loop :repeat 6 :do (readu8-be buf)) ; pad
+                                                      (readu64-be buf))
+                                        :tx_packets (readu64-be buf)
+                                        :rx_bytes (readu64-be buf)
+                                        :tx_bytes (readu64-be buf)
+                                        :rx_dropped (readu64-be buf)
+                                        :tx_dropped (readu64-be buf)
+                                        :rx_errors (readu64-be buf)
+                                        :tx_errors (readu64-be buf)
+                                        :rx_frame_err (readu64-be buf)
+                                        :rx_over_err (readu64-be buf)
+                                        :rx_crc_err (readu64-be buf)
+                                        :collisions (readu64-be buf)))
+                  ((= type OFPST_QUEUE)
+                   (make-ofp_queue_stats :port_no (readu16-be buf)
+                                         :queue_id (progn
+                                                     (readu16-be buf) ; pad
+                                                     (readu32-be buf))
+                                         :tx_bytes (readu64-be buf)
+                                         :tx_packets (readu64-be buf)
+                                         :tx_errors (readu64-be buf)))
+                  ((= type OFPST_VENDOR)
+                   (let* ((blen (- (ofp_header-length header) 12))
+                          (vec (make-octet-vector blen)))
+                     (fast-read-sequence vec buf 0 blen)
+                     vec))
+                  (t nil)))
+      rep)))
+
+@export
 (defun make-ofp_packet_in-stream (header stream)
   (let ((rest (- (ofp_header-length header) 8)))
     (with-fast-input (buf nil stream)
@@ -228,6 +353,84 @@
                       (loop :for i :across (ofp_action_vendor_header-body a)
                             :do (fast-write-byte i buf))))
                   (t nil))))
+
+@export
+(defun make-ofp_actions-buffer (buf len)
+  (loop :while (> len 0)
+        :collect (let ((type (readu16-be buf))
+                       (blen (readu16-be buf)))
+                   (cond ((= type OFPAT_OUTPUT)
+                          (progn
+                            (setf len (- len 8))
+                            (make-ofp_action_output :type type
+                                                    :len blen
+                                                    :port (readu16-be buf)
+                                                    :max_len (readu16-be buf))))
+                         ((= type OFPAT_ENQUEUE)
+                          (progn
+                            (setf len (- len 16))
+                            (make-ofp_action_enqueue :type type
+                                                     :len blen
+                                                     :port (readu16-be buf)
+                                                     :queue_id (progn
+                                                                 (loop :repeat 6 :do (readu8-be buf)) ; pad
+                                                                 (readu32-be buf)))))
+                         ((= type OFPAT_SET_VLAN_VID)
+                          (progn
+                            (setf len (- len 8))
+                            (make-ofp_action_vlan_vid :type type
+                                                      :len blen
+                                                      :vlan_vid (prog1
+                                                                  (readu16-be buf)
+                                                                  (readu16-be buf))))) ; pad
+                         ((= type OFPAT_SET_VLAN_PCP)
+                          (progn
+                            (setf len (- len 8))
+                            (make-ofp_action_vlan_pcp :type type
+                                                      :len blen
+                                                      :blan_pcp (prog1
+                                                                  (readu8-be buf)
+                                                                  (loop :repeat 3 :do (readu8-be buf)))))) ; pad
+                         ((or (= type OFPAT_SET_DL_SRC) (= type OFPAT_SET_DL_DST))
+                          (progn
+                            (setf len (- len 16))
+                            (make-ofp_action_dl_addr :type type
+                                                     :len blen
+                                                     :dl_addr (let ((vec (make-octet-vector OFP_ETH_ALEN)))
+                                                                (fast-read-sequence vec buf 0 OFP_ETH_ALEN)
+                                                                (loop :repeat 6 :do (readu8-be buf)) ; pad
+                                                                vec))))
+                         ((or (= type OFPAT_SET_NW_SRC) (= type OFPAT_SET_NW_DST))
+                          (progn
+                            (setf len (- len 8))
+                            (make-ofp_action_nw_addr :type type
+                                                     :len blen
+                                                     :nw_addr (readu32-be buf))))
+                         ((= type OFPAT_SET_NW_TOS)
+                          (progn
+                            (setf len (- len 8))
+                            (make-ofp_action_nw_tos :type type
+                                                    :len blen
+                                                    :nw_tos (prog1
+                                                              (readu8-be buf)
+                                                              (loop :repeat 3 :do (readu8-be buf)))))) ; pad
+                         ((or (= type OFPAT_SET_TP_SRC) (= type OFPAT_SET_TP_DST))
+                          (progn
+                            (setf len (- len 8))
+                            (make-ofp_action_tp_port :type type
+                                                     :len blen
+                                                     :tp_port (prog1
+                                                                (readu16-be buf)
+                                                                (readu16-be buf))))) ; pad
+                         ((= type OFPAT_VENDOR)
+                          (progn
+                            (setf len (- len blen))
+                            (make-ofp_action_vendor_header :type type
+                                                           :len blen
+                                                           :vendor (readu32-be buf)
+                                                           :body (let ((vec (make-octet-vector (- blen 8))))
+                                                                   (fast-read-sequence vec buf 0 (- blen 8))
+                                                                   vec))))))))
 
 @export
 (defun make-ofp_flow_removed-stream (header stream)
