@@ -27,18 +27,18 @@
 
 (defhandler hello-handler OFPT_HELLO (socket header stream)
   (format t "HELLO ~A from ~A~&" header socket)
-  (let* ((hello (make-ofp_header :version OFP_VERSION
-                                 :type OFPT_HELLO
-                                 :length 8
-                                 :xid (ofp_header-xid header))))
-    (write-socket-data socket (with-fast-output (buf) (dump-ofp_header hello buf)))
-    (let ((data (with-fast-output (buf)
-                  (dump-ofp_header (make-ofp_header :version OFP_VERSION
-                                                    :type OFPT_FEATURES_REQUEST
-                                                    :length 8
-                                                    :xid (ofp_header-xid header))
-                                   buf))))
-      (write-socket-data socket data))))
+  (write-socket-data socket
+    (with-fast-output (buf)
+      (dump-ofp_header (make-ofp_header :version OFP_VERSION
+                                        :type OFPT_HELLO
+                                        :length 8
+                                        :xid (ofp_header-xid header))
+                       buf)
+      (dump-ofp_header (make-ofp_header :version OFP_VERSION
+                                        :type OFPT_FEATURES_REQUEST
+                                        :length 8
+                                        :xid (ofp_header-xid header))
+                       buf))))
 
 (defhandler features-reply-handler OFPT_FEATURES_REPLY (socket header stream)
   (let* ((rep (make-ofp_switch_features-stream header stream)))
