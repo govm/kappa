@@ -43,7 +43,18 @@
 (defhandler features-reply-handler OFPT_FEATURES_REPLY (socket header stream)
   (let* ((rep (make-ofp_switch_features-stream header stream)))
     (format t "FEATURES_REPLY ~A from ~A~&" rep socket)
-    (setf (socket-data socket) rep)))
+    (setf (socket-data socket) rep)
+    (write-socket-data socket
+      (with-fast-output (buf)
+        (dump-ofp_header (make-ofp_header :version OFP_VERSION
+                                          :type OFPT_GET_CONFIG_REQUEST
+                                          :length 8
+                                          :xid (ofp_header-xid header))
+                         buf)))))
+
+(defhandler get-config-reply-handler OFPT_GET_CONFIG_REPLY (socket header stream)
+  (let ((rep (make-ofp_switch_config-stream header stream)))
+    (format t "GET_CONFIG_REPLY ~A~&" rep)))
 
 (defhandler echo-handler OFPT_ECHO_REQUEST (socket header stream)
   (let* ((body-len (- (ofp_header-length header) 8))

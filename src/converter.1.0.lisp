@@ -45,6 +45,19 @@
                                              :collect (make-ofp_phy_port-buffer buf))))))
 
 @export
+(defun make-ofp_switch_config-stream (header stream)
+  (with-fast-input (buf nil stream)
+    (make-ofp_switch_config :header header
+                            :flags (readu16-be buf)
+                            :miss_send_len (readu16-be buf))))
+
+@export
+(defun dump-ofp_switch_config (config buf)
+  (dump-ofp_header (ofp_switch_config-header config) buf)
+  (writeu16-be (ofp_switch_config-flags config) buf)
+  (writeu16-be (ofp_switch_config-miss_send_len config) buf))
+
+@export
 (defun make-ofp_packet_in-stream (header stream)
   (let ((rest (- (ofp_header-length header) 8)))
     (with-fast-input (buf nil stream)

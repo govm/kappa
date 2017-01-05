@@ -16,7 +16,7 @@
   (make-in-memory-input-stream v))
 
 
-(plan 41)
+(plan 45)
 
 (let* ((h (make-ofp_header :version 1 :type OFPT_FEATURES_REPLY :length 80 :xid 0))
        (v #(1 0 1 0 0 1 0 1; datapath_id
@@ -245,5 +245,20 @@
   (is (ofp_flow_removed-packet_count b) 1)
   (is (ofp_flow_removed-byte_count b) #x0100000000000000)
   (is-error (read-byte s) 'end-of-file))
+
+(let* ((h (make-ofp_header :version 1 :type OFPT_GET_CONFIG_REPLY :length 16 :xid 0))
+       (v #(0 1 1 0))
+       (s (vs v))
+       (b (make-ofp_switch_config-stream h s)))
+  (is (ofp_switch_config-flags b) 1)
+  (is (ofp_switch_config-miss_send_len b) #x0100)
+  (is-error (read-byte s) 'end-of-file))
+
+(let* ((h (make-ofp_header :version 1 :type OFPT_SET_CONFIG :length 16 :xid 0))
+       (c (make-ofp_switch_config :header h :flags 1 :miss_send_len #x0100))
+       (expect #(1 #.OFPT_SET_CONFIG 0 16 0 0 0 0
+                 0 1 1 0))
+       (dump (with-fast-output (buf) (dump-ofp_switch_config c buf))))
+  (is dump expect :test #'equalp))
 
 (finalize)
