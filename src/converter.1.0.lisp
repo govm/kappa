@@ -482,3 +482,20 @@
                           :data (let ((vec (make-octet-vector (- rest 4))))
                                   (fast-read-sequence vec buf 0 (- rest 4))
                                   vec)))))
+
+@export
+(defun dump-ofp_vendor_header (v buf)
+  (dump-ofp_header (ofp_vendor_header-header v) buf)
+  (writeu32-be (ofp_vendor_header-vendor v) buf)
+  (loop :for i :across (ofp_vendor_header-data v)
+        :do (fast-write-byte i buf)))
+
+@export
+(defun make-ofp_vendor_header-stream (header stream)
+  (let ((rest (- (ofp_header-length header) 12)))
+    (with-fast-input (buf nil stream)
+      (make-ofp_vendor_header :header header
+                              :vendor (readu32-be buf)
+                              :data (let ((vec (make-octet-vector rest)))
+                                      (fast-read-sequence vec buf 0 rest)
+                                      vec)))))

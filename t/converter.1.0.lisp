@@ -16,7 +16,7 @@
   (make-in-memory-input-stream v))
 
 
-(plan 48)
+(plan 49)
 
 (let* ((h (make-ofp_header :version 1 :type OFPT_FEATURES_REPLY :length 80 :xid 0))
        (v #(1 0 1 0 0 1 0 1; datapath_id
@@ -532,5 +532,23 @@
                    0 1 2 3 4 5 6 7))
          (dump (with-fast-output (buf) (dump-ofp_packet_out o buf))))
     (is dump expect :test #'equalp)))
+
+(subtest "ofp_vendor"
+  (let* ((h (make-ofp_header :version 1 :type OFPT_VENDOR :length 16 :xid 0))
+         (v (make-ofp_vendor_header :header h
+                                    :vendor 1
+                                    :data #(0 1 2 3)))
+         (expect #(1 #.OFPT_VENDOR 0 16 0 0 0 0
+                   0 0 0 1
+                   0 1 2 3))
+         (dump (with-fast-output (buf) (dump-ofp_vendor_header v buf))))
+    (is dump expect :test #'equalp))
+  (let* ((h (make-ofp_header :version 1 :type OFPT_VENDOR :length 16 :xid 0))
+         (v #(0 0 0 1 0 1 2 3))
+         (s (vs v))
+         (b (make-ofp_vendor_header-stream h s)))
+    (is (ofp_vendor_header-vendor b) 1)
+    (is (ofp_vendor_header-data b) #(0 1 2 3) :test #'equalp)
+    (is-error (read-byte s) 'end-of-file)))
 
 (finalize)
