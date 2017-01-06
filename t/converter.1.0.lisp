@@ -16,7 +16,7 @@
   (make-in-memory-input-stream v))
 
 
-(plan 47)
+(plan 48)
 
 (let* ((h (make-ofp_header :version 1 :type OFPT_FEATURES_REPLY :length 80 :xid 0))
        (v #(1 0 1 0 0 1 0 1; datapath_id
@@ -512,5 +512,25 @@
         (ok (vectorp bb))
         (is bb #(0 1 2 3) :test #'equalp))
       (is-error (read-byte s) 'end-of-file))))
+
+(subtest "ofp_packet_out"
+  (let* ((h (make-ofp_header :version 1 :type OFPT_PACKET_OUT :length 32 :xid 0))
+         (o (make-ofp_packet_out :header h
+                                 :buffer_id 1
+                                 :in_port 2
+                                 :actions_len 3
+                                 :actions (list (make-ofp_action_output :type OFPAT_OUTPUT
+                                                                        :len 8
+                                                                        :port 1
+                                                                        :max_len 0))
+                                 :data #(0 1 2 3 4 5 6 7)))
+         (expect #(1 #.OFPT_PACKET_OUT 0 32 0 0 0 0
+                   0 0 0 1
+                   0 2
+                   0 3
+                   0 #.OFPAT_OUTPUT 0 8 0 1 0 0
+                   0 1 2 3 4 5 6 7))
+         (dump (with-fast-output (buf) (dump-ofp_packet_out o buf))))
+    (is dump expect :test #'equalp)))
 
 (finalize)

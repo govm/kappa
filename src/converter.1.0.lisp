@@ -194,6 +194,16 @@
       rep)))
 
 @export
+(defun dump-ofp_packet_out (out buf)
+  (dump-ofp_header (ofp_packet_out-header out) buf)
+  (writeu32-be (ofp_packet_out-buffer_id out) buf)
+  (writeu16-be (ofp_packet_out-in_port out) buf)
+  (writeu16-be (ofp_packet_out-actions_len out) buf)
+  (dump-ofp_actions (ofp_packet_out-actions out) buf)
+  (loop :for i :across (ofp_packet_out-data out)
+        :do (fast-write-byte i buf)))
+
+@export
 (defun make-ofp_packet_in-stream (header stream)
   (let ((rest (- (ofp_header-length header) 8)))
     (with-fast-input (buf nil stream)
