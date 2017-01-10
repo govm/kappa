@@ -443,6 +443,20 @@
                                                                    vec))))))))
 
 @export
+(defun get-actions-length (actions)
+  (apply #'+ (loop :for a :in actions
+                   :collect (cond ((ofp_action_output-p a) 8)
+                                  ((ofp_action_enqueue-p a) 16)
+                                  ((ofp_action_vlan_vid-p a) 8)
+                                  ((ofp_action_vlan_pcp-p a) 8)
+                                  ((ofp_action_dl_addr-p a) 16)
+                                  ((ofp_action_nw_addr-p a) 8)
+                                  ((ofp_action_nw_tos-p a) 8)
+                                  ((ofp_action_tp_port-p a) 8)
+                                  ((ofp_action_vendor_header-p a)
+                                   (ofp_action_vendor_header-len a))))))
+
+@export
 (defun make-ofp_flow_removed-stream (header stream)
   (let ((rest (- (ofp_header-length header) 8)))
     (with-fast-input (buf nil stream)
