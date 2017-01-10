@@ -145,7 +145,7 @@
            (data (with-fast-output (buf) (dump-ofp_flow_mod flow_mod buf))))
       (adjust-length data)
       (write-socket-data socket data)
-      (if (= (ofp_packet_in-buffer_id body) #xffffffff)
+      (if (= (ofp_packet_in-buffer_id body) OFP_NO_BUFFER)
         (let* ((out (make-ofp_packet_out :header (make-ofp_header :version OFP_VERSION
                                                                   :type OFPT_PACKET_OUT
                                                                   :length 0
