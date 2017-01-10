@@ -144,7 +144,20 @@
                                                                                         :max_len 0))))
            (data (with-fast-output (buf) (dump-ofp_flow_mod flow_mod buf))))
       (adjust-length data)
-      (write-socket-data socket data))))
+      (write-socket-data socket data)
+      (if (= (ofp_packet_in-buffer_id body) #xffffffff)
+        (let* ((out (make-ofp_packet_out :header (make-ofp_header :version OFP_VERSION
+                                                                  :type OFPT_PACKET_OUT
+                                                                  :length 0
+                                                                  :xid (ofp_header-xid header))
+                                         :buffer_id (ofp_packet_in-buffer_id body)
+                                         :in_port (ofp_packet_in-in_port body)
+                                         :actions_len (* (length (ofp_flow_mod-actions flow_mod)) 8)
+                                         :actions (ofp_flow_mod-actions flow_mod)
+                                         :data (ofp_packet_in-data body)))
+              (data_out (with-fast-output (buf) (dump-ofp_packet_out out buf))))
+          (adjust-length data_out)
+          (write-socket-data socket data_out))))))
 
 (defun run ()
   (let ((kappa.server:*debug* t))
