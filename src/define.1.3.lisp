@@ -513,7 +513,7 @@
 (defconstants "ofp_meter_band_type"
   (OFPMBT_DROP 1)
   (OFPMBT_DSCP_REMARK 2)
-  (OFPMBT_EXPERIMENTER 3))
+  (OFPMBT_EXPERIMENTER #xffff))
 
 @export-structure-p
 (defstruct ofp_meter_band_drop
@@ -720,6 +720,10 @@
   tx_errors
   duration_sec
   duration_nsec)
+
+@export-structure-p
+(defstruct ofp_group_stats_request
+  group_id)
 
 @export-structure-p
 (defstruct ofp_group_stats

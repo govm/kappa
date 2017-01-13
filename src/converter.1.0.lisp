@@ -5,7 +5,7 @@
         :anaphora
         :kappa.converter
         :kappa.define.1.0)
-  (:import-from kappa.define
+  (:import-from :kappa.define
                 :ofp_header-length)
   (:import-from :babel
                 :octets-to-string))

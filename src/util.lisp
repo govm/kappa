@@ -6,9 +6,12 @@
                 :ofp_header-type)
   (:import-from :kappa.server
                 :add-handler)
+  (:import-from :alexandria
+                :symbolicate)
   (:export :get-peername
            :adjust-length
-           :defhandler))
+           :defhandler
+           :with-prefix))
 (in-package :kappa.util)
 
 (defun %get-peername (socket)
@@ -50,3 +53,10 @@
            t
            ,@body)
          nil))))
+
+(defmacro with-prefix ((shortname prefix) &body body)
+  (let ((postfix (gensym "postfix")))
+    `(macrolet ((,shortname (,postfix &rest rest)
+                  `(,(symbolicate ',prefix ,postfix) ,@rest)))
+       (progn
+         ,@body))))

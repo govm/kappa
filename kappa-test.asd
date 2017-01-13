@@ -19,9 +19,11 @@
                 :components
                 ((:test-file "kappa")
                  (:test-file "define.1.0")
+                 (:test-file "util")
                  (:test-file "util.1.5")
                  (:test-file "converter")
-                 (:test-file "converter.1.0"))))
+                 (:test-file "converter.1.0")
+                 (:test-file "converter.1.3"))))
   :description "Test system for kappa"
 
   :defsystem-depends-on (:prove-asdf)
