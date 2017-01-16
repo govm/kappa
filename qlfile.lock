@@ -38,3 +38,10 @@
  (:class qlot.source.ql:source-ql
   :initargs (:project-name "flexi-streams" :%version :latest)
   :version "ql-2016-12-08"))
+("static-vectors" .
+ (:class qlot.source.github:source-github
+  :initargs (:project-name "static-vectors" :repos "sionescu/static-vectors" :ref nil :branch nil :tag nil)
+  :version "github-eddb4e9eff8711c4435514fd239ad57ee59a77d8"
+  :repos "sionescu/static-vectors"
+  :url "https://github.com/sionescu/static-vectors/archive/eddb4e9eff8711c4435514fd239ad57ee59a77d8.tar.gz"
+  :ref "eddb4e9eff8711c4435514fd239ad57ee59a77d8"))

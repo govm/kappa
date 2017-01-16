@@ -7,3 +7,4 @@ ql alexandria :latest
 ql cffi :latest
 ql anaphora :latest
 ql flexi-streams :latest
+github static-vectors sionescu/static-vectors
