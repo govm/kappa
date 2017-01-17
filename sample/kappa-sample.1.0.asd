@@ -8,11 +8,11 @@
 |#
 
 (in-package :cl-user)
-(defpackage kappa-sample-asd
+(defpackage kappa-sample.1.0-asd
   (:use :cl :asdf))
-(in-package :kappa-sample-asd)
+(in-package :kappa-sample.1.0-asd)
 
-(defsystem kappa-sample
+(defsystem kappa-sample.1.0
   :version "0.1"
   :author "Go Saito"
   :license "MIT"
@@ -21,9 +21,7 @@
                :cl-annot
                :babel
                :fast-io)
-  :components ((:module "sample"
-                :components
-                ((:file "sample"))))
+  :components ((:file "sample.1.0"))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

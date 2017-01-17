@@ -1,5 +1,5 @@
 (in-package :cl-user)
-(defpackage kappa-sample
+(defpackage kappa-sample.1.0
   (:use :cl
         :kappa.define.1.0
         :kappa.converter.1.0
@@ -24,7 +24,7 @@
                 :socket-data
                 :with-delay)
   (:export :run))
-(in-package :kappa-sample)
+(in-package :kappa-sample.1.0)
 
 (defhandler hello-handler OFPT_HELLO (socket header stream)
   (format t "HELLO ~A from ~A~&" header socket)
