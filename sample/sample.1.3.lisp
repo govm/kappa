@@ -67,7 +67,7 @@
                                                               :len 24
                                                               :actions (list (make-ofp_action_output
                                                                                :port OFPP_CONTROLLER
-                                                                               :max_len 0))))))
+                                                                               :max_len OFPCML_NO_BUFFER))))))
            (data (with-fast-output (buf) (dump-ofp_flow_mod flow_mod buf))))
       (adjust-length data)
       (write-socket-data socket data))))
