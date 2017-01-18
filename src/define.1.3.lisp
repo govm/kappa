@@ -182,6 +182,15 @@
   length
   oxm_fields)
 
+@export-structure-p
+(defstruct oxm
+  class
+  field
+  hasmask
+  length
+  value
+  mask)
+
 (defconstants "ofp_match_type"
   (OFPMT_STANDARD 0)
   (OFPMT_OXM 1))

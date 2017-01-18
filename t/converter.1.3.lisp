@@ -1249,28 +1249,46 @@
 
 (subtest "ofp_match"
   (let* ((m (make-ofp_match :type OFPMT_OXM
-                            :length 14
-                            :oxm_fields #(0 0 0 0
-                                          0 0 0 2 0 0)))
+                            :length 24
+                            :oxm_fields (list (make-oxm :class 0
+                                                        :field 1
+                                                        :hasmask 0
+                                                        :length 4
+                                                        :value #(0 1 2 3))
+                                              (make-oxm :class 0
+                                                        :field 1
+                                                        :hasmask 1
+                                                        :length 8
+                                                        :value #(0 1 2 3)
+                                                        :mask #(4 5 6 7)))))
          (expect #(0 #.OFPMT_OXM
-                   0 14
-                   0 0 0 0
-                   0 0 0 2 0 0
-                   0 0))
+                   0 24
+                   0 0 2 4 0 1 2 3
+                   0 0 3 8 0 1 2 3 4 5 6 7 ))
          (dump (with-fast-output (buf) (dump-ofp_match m buf))))
     (is dump expect :test #'equalp))
   (let* ((v #(0 #.OFPMT_OXM
-              0 14
-              0 0 0 0
-              0 0 0 2 0 0
-              0 0))
+              0 24
+              0 0 2 4 0 1 2 3
+              0 0 3 8 0 1 2 3 4 5 6 7))
          (s (vs v))
          (b (make-ofp_match-stream s)))
     (with-prefix (m ofp_match-)
       (ok (m p b))
       (is (m type b) OFPMT_OXM)
-      (is (m length b) 14)
-      (is (m oxm_fields b) #(0 0 0 0 0 0 0 2 0 0) :test #'equalp))
+      (is (m length b) 24)
+      (is (m oxm_fields b) (list (make-oxm :class 0
+                                           :field 1
+                                           :hasmask 0
+                                           :length 4
+                                           :value #(0 1 2 3))
+                                 (make-oxm :class 0
+                                           :field 1
+                                           :hasmask 1
+                                           :length 8
+                                           :value #(0 1 2 3)
+                                           :mask #(4 5 6 7)))
+          :test #'equalp))
     (is-error (read-byte s) 'end-of-file)))
 
 (finalize)

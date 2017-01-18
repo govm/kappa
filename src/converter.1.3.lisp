@@ -71,8 +71,7 @@
       (let ((len (ma length match)))
         (writeu16-be (ma type match) buf)
         (writeu16-be len buf)
-        (loop :for i :across (or (ma oxm_fields match) #())
-              :do (writeu8-be i buf))
+        (dump-oxm_tlvs (ma oxm_fields match) buf)
         (loop :repeat (padsize len)
               :do (writeu8-be 0 buf))))))
 
@@ -88,7 +87,7 @@
     (prog1
       (make-ofp_match :type type
                       :length len
-                      :oxm_fields (read-vector (- len 4) buf))
+                      :oxm_fields (make-oxm_tlvs (- len 4) buf))
       (loop :repeat (padsize len)
             :do (readu8-be buf)))))
 
@@ -96,6 +95,41 @@
 (defun make-ofp_match-stream (stream)
   (with-fast-input (buf nil stream)
     (make-ofp_match-buffer buf)))
+
+@export
+(defun make-oxm_tlvs (len buf)
+  (loop :while (> len 0)
+        :collect (let* ((class (readu16-be buf))
+                        (fm (readu8-be buf))
+                        (field (ash fm -1))
+                        (hasmask (logand fm 1))
+                        (vlen (readu8-be buf)))
+                   (setf len (- len vlen 4))
+                   (if (= hasmask 0)
+                     (make-oxm :class class
+                               :field field
+                               :hasmask hasmask
+                               :length vlen
+                               :value (read-vector vlen buf)
+                               :mask nil)
+                     (make-oxm :class class
+                               :field field
+                               :hasmask hasmask
+                               :length vlen
+                               :value (read-vector (truncate vlen 2) buf)
+                               :mask (read-vector (truncate vlen 2) buf))))))
+
+@export
+(defun dump-oxm_tlvs (tlvs buf)
+  (loop :for oxm :in tlvs
+        :do (progn
+              (writeu16-be (oxm-class oxm) buf)
+              (writeu8-be (+ (* (oxm-field oxm) 2) (oxm-hasmask oxm)) buf)
+              (writeu8-be (oxm-length oxm) buf)
+              (loop :for v :across (oxm-value oxm)
+                    :do (writeu8-be v buf))
+              (loop :for v :across (or (oxm-mask oxm) #())
+                    :do (writeu8-be v buf)))))
 
 @export
 (defun dump-ofp_flow_mod (mod buf)
