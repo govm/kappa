@@ -450,6 +450,11 @@
   group_id
   buckets)
 
+(defconstants "ofp_group"
+  (OFPG_MAX #xffffff00)
+  (OFPG_ALL #xfffffffc)
+  (OFPG_ANY #xffffffff))
+
 (defconstants "ofp_group_mod_command"
   (OFPGC_ADD 0)
   (OFPGC_MODIFY 1)
