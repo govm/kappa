@@ -23,7 +23,8 @@
                :fast-io
                :alexandria
                :cffi
-               :anaphora)
+               :anaphora
+               :flexi-streams)
   :components ((:module "src"
                 :components
                 ((:file "kappa")

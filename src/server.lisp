@@ -14,6 +14,8 @@
                 :with-fast-input
                 :fast-read-sequence
                 :make-octet-vector)
+  (:import-from :flexi-streams
+                :make-in-memory-input-stream)
   (:export :start-server
            :add-handler
            :*debug*))
@@ -54,9 +56,15 @@
 
 (defun dispatcher (socket stream)
   (handler-case
-      (let ((header (make-ofp_header-stream stream)))
+      (let* ((header (make-ofp_header-stream stream))
+             (blen (- (ofp_header-length header) 8))
+             (vec (with-fast-input (buf nil stream)
+                    (let ((_vec (make-octet-vector blen)))
+                      (fast-read-sequence _vec buf 0 blen)
+                      _vec)))
+             (st (make-in-memory-input-stream vec)))
         (loop :for h :in *handlers*
-              :until (funcall h socket header stream)))
+              :until (funcall h socket header st)))
     (end-of-file () (progn
                       (format *error-output* "socket EOF~&")
                       (close-socket socket)))))
