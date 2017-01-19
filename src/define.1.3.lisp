@@ -184,7 +184,7 @@
 
 @export-structure-p
 (defstruct oxm
-  class
+  (class OFPXMC_OPENFLOW_BASIC)
   field
   hasmask
   length
