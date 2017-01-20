@@ -37,8 +37,7 @@
                        buf)
       (dump-ofp_header (make-ofp_header :version OFP_VERSION
                                         :type OFPT_FEATURES_REQUEST
-                                        :length 8
-                                        :xid (ofp_header-xid header))
+                                        :length 8)
                        buf))))
 
 (defhandler features-reply-handler OFPT_FEATURES_REPLY (socket header stream)
@@ -47,8 +46,7 @@
     (setf (socket-data socket) rep)
     (let* ((header (make-ofp_header :version OFP_VERSION
                                     :type OFPT_FLOW_MOD
-                                    :length 0 ; set it later
-                                    :xid (ofp_header-xid header)))
+                                    :length 0)) ; set it later
            (flow_mod (make-ofp_flow_mod :header header
                                         :cookie 0
                                         :cookie_mask 0
@@ -133,8 +131,7 @@
     ;(format t "PACKET_IN ~A from ~A~&" body socket)
     (let* ((header (make-ofp_header :version OFP_VERSION
                                     :type OFPT_FLOW_MOD
-                                    :length 0 ; set it later
-                                    :xid (ofp_header-xid header)))
+                                    :length 0)) ; set it later
            (flow_mod (make-ofp_flow_mod :header header
                                         :cookie 0
                                         :cookie_mask 0
@@ -160,8 +157,7 @@
       (if (= (ofp_packet_in-buffer_id body) OFP_NO_BUFFER)
         (let* ((out (make-ofp_packet_out :header (make-ofp_header :version OFP_VERSION
                                                                   :type OFPT_PACKET_OUT
-                                                                  :length 0
-                                                                  :xid (ofp_header-xid header))
+                                                                  :length 0)
                                          :buffer_id (ofp_packet_in-buffer_id body)
                                          :in_port OFPP_CONTROLLER
                                          :actions_len (get-actions-length (ofp_instruction_actions-actions (car (ofp_flow_mod-instructions flow_mod))))

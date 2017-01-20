@@ -13,4 +13,4 @@
   version
   type
   length
-  xid)
+  (xid (random #xffffffff)))
